@@ -3,23 +3,17 @@ import { Steps, Button, message, Card, Skeleton } from 'antd'
 import ServiceStep from './steps/ServiceStep'
 import PersonalInfoStep from './steps/PersonalInfoStep'
 import SummaryStep from './steps/SummaryStep'
-import { FormValues } from './types'
+import type { FormValues } from './types'
 import { Dayjs } from 'dayjs'
 import axios from 'axios'
-import { Employee } from '@/pages/Employee.js'
-import { Category, Duration } from '@/pages/Appointment'
+
+import type { Service, Company, TeamMember } from './types'
+
 import ServiceStepSkeleton from '@/components/booking/steps/ServiceStepSkeleton'
 import SummaryStepSkeleton from '@/components/booking/steps/SummaryStepSkeleton'
-import { Company } from '@/pages/Setting'
 
-import apiClient from '@/utils/apiClient'
-import { createAppointment, getAppointments } from '@/appointments/api'
-import { getServices } from '@/services/api'
-import { getTeamMembers, TeamMember } from '@/teamMembers/api'
-import { transformMemberToEmployee } from '@/teamMembers/functions'
-import { TBookingFormData } from '../calendar/schemas'
+import { createAppointment, getAppointments, getServices, getTeamMembers } from '@/api'
 import { useApiNotifications } from '@/utils/api-notifications'
-import { useCalendar } from '../calendar/contexts/calendar-context'
 
 const { Step } = Steps
 
@@ -32,15 +26,6 @@ interface Booking {
   notificationEnabled: boolean
   date: Dayjs | null
   time: string | undefined
-}
-
-interface Service {
-  id: number
-  Name: string
-  Price: number
-  ColorCode: string
-  Category: Category
-  Duration: Duration
 }
 
 const initialBookingState: Booking = {
@@ -107,7 +92,6 @@ const AppointmentBookingForm: React.FC = () => {
 
   const [messageApi, contextHolder] = message.useMessage({ top: wpadminbarHeight })
 
-    const { refreshBookings } = useCalendar();
 
   const { handleApiResponse, handleApiError, notifications } = useApiNotifications();
 
