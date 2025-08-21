@@ -1,69 +1,67 @@
-# React + TypeScript + Vite
+# Booking Widget
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, responsive booking widget built with React, TypeScript, and Ant Design. This application provides a multi-step booking flow for appointment scheduling with real-time availability and notifications.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Multi-step booking flow**: Service selection → Date/Time → Personal Info → Summary
+- **Real-time availability**: Dynamic time slot management
+- **Responsive design**: Works on desktop and mobile devices
+- **Form validation**: Built-in validation for all user inputs
+- **Notifications**: Toast notifications for user feedback
+- **API integration**: Backend integration for booking management
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **React 19** - UI framework
+- **TypeScript** - Type safety
+- **Vite** - Build tool and dev server
+- **Ant Design** - UI component library
+- **Axios** - HTTP client
+- **date-fns/dayjs** - Date manipulation
+- **Sonner** - Toast notifications
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Quick Start
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+```bash
+# Install dependencies
+npm install
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Project Structure
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+├── components/
+│   ├── App/                    # Main app component
+│   ├── booking/               # Booking-related components
+│   │   ├── AppointmentBookingForm.tsx  # Main booking form
+│   │   ├── api.ts             # API functions
+│   │   ├── types.ts           # TypeScript types
+│   │   ├── functions.ts       # Utility functions
+│   │   ├── use-notifications.ts # Notification hooks
+│   │   └── steps/             # Individual form steps
+│   │       ├── ServiceStep.tsx
+│   │       ├── DateTimeStep.tsx
+│   │       ├── PersonalInfoStep.tsx
+│   │       └── SummaryStep.tsx
+│   └── types/                 # Global type definitions
+└── styles/                    # CSS styles
+```
+
+## Key Files
+
+- **`src/components/booking/AppointmentBookingForm.tsx`** - Main booking form component
+- **`src/components/booking/api.ts`** - API integration functions
+- **`src/components/booking/types.ts`** - TypeScript interfaces for booking data
+- **`src/components/booking/steps/`** - Individual step components for the booking flow
+- **`src/styles/App.css`** - Main application styles
