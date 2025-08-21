@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { Form, Input, Row, Col } from 'antd'
-import { FormValues } from '@/components/booking/types'
+import type { FormValues } from '@/components/booking/types'
 
 interface Customer {
   id: string

@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react'
 import { Steps, Button, message, Card, Skeleton } from 'antd'
-import ServiceStep from './steps/ServiceStep'
-import PersonalInfoStep from './steps/PersonalInfoStep'
-import SummaryStep from './steps/SummaryStep'
-import type { FormValues } from './types'
+import ServiceStep from '@/components/booking/steps/ServiceStep'
+import PersonalInfoStep from '@/components/booking/steps/PersonalInfoStep'
+import SummaryStep from '@/components/booking/steps/SummaryStep'
+import type { FormValues } from '@/components/booking/types'
 import { Dayjs } from 'dayjs'
 import axios from 'axios'
 
-import type { Service, Company, TeamMember } from './types'
+import type { Service, Company, TeamMember } from '@/components/booking/types'
 
 import ServiceStepSkeleton from '@/components/booking/steps/ServiceStepSkeleton'
 import SummaryStepSkeleton from '@/components/booking/steps/SummaryStepSkeleton'
 
-import { createAppointment, getAppointments, getServices, getTeamMembers } from '@/api'
-import { useApiNotifications } from '@/utils/api-notifications'
+import { createAppointment, getAppointments, getServices, getTeamMembers } from '@/components/booking/api'
+import { useApiNotifications } from '@/components/booking/api-notifications'
 
 const { Step } = Steps
 
@@ -68,7 +68,11 @@ const initialFormValues = {
   additionalNotes: undefined
 } as FormValues
 
-const AppointmentBookingForm: React.FC = () => {
+interface AppointmentBookingFormProps {
+  tenantId?: string;
+}
+
+const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({ tenantId = 'default' }) => {
   const [current, setCurrent] = useState(0)
   const [formValues, setFormValues] = useState<FormValues>(initialFormValues)
   const [bookingValues, setBookingValues] = useState<Booking>(initialBookingState)
@@ -110,7 +114,7 @@ const AppointmentBookingForm: React.FC = () => {
             setFormValues={setFormValues}
             bookingValues={bookingValues}
             setBookingValues={setBookingValues}
-            company={company.length > 0 ? company[0] : company}
+            company={company || { id: undefined, image: '', name: '', address: '', website: '', phone: '', email: '', time_entries: [], days_off: [] }}
             rawServiceData={rawServiceData}
             rawEmployeeData={rawEmployeeData}
             rawBookingData={rawBookingData}
@@ -204,13 +208,10 @@ const AppointmentBookingForm: React.FC = () => {
       };
 
       const loadingToast = notifications.loading('Creating booking...');
-      const response = await createAppointment(booking);
+      const response = await createAppointment(booking, tenantId);
       notifications.dismiss(loadingToast);
 
       handleApiResponse(response, 'Booking created successfully');
-      if (typeof refreshBookings === "function") {
-        await refreshBookings();
-      }
 
       messageApi.success({
         content: 'Appointment booked successfully!',
@@ -287,17 +288,15 @@ const AppointmentBookingForm: React.FC = () => {
     //setLoading(true)
 
     try {
-      const [appointmentsResponse, servicesResponse, employeesResponse, companyResponse] = await Promise.all([
-        getAppointments(),
-        getServices(),
-        getTeamMembers(),
-        //[],
-        []
+      const [appointmentsResponse, servicesResponse, employeesResponse] = await Promise.all([
+        getAppointments(tenantId),
+        getServices(tenantId),
+        getTeamMembers(tenantId)
       ])
       setRawBookingData(appointmentsResponse)
       setRawServiceData(servicesResponse.data)
       setRawEmployeeData(employeesResponse.data.data)
-      setCompany(companyResponse)
+      setCompany(undefined) // Company data will be handled separately
     } catch (error) {
       console.error('Something went wrong:', error)
     } /*finally {
@@ -345,7 +344,7 @@ const AppointmentBookingForm: React.FC = () => {
               ))}
             </Steps>
             <div className='steps-content'>{steps[current].content}</div>
-            <div className='steps-action' style={{ marginTop: 24 }}>
+            <div className='steps-action' style={{ marginTop: 24, textAlign: 'right' }}>
               {current > 0 && (
                 <Button style={{ margin: '0 8px' }} onClick={() => prev()} disabled={loading || submitting}>
                   Previous

@@ -1,6 +1,6 @@
 import React from 'react'
 import { Descriptions } from 'antd'
-import { FormValues } from '@/components/booking/types'
+import type { FormValues } from '@/components/booking/types'
 
 interface SummaryStepProps {
   formValues: FormValues

@@ -1,5 +1,6 @@
 import axios, { type AxiosResponse } from "axios";
 
+const baseUrl: string = 'http://localhost:8000/api/v1';
 
 export const createAppointment = async (data: any, tenantId: string) => {
   const pad = (n: number) => n.toString().padStart(2, "0");
@@ -10,7 +11,7 @@ export const createAppointment = async (data: any, tenantId: string) => {
       : undefined,
   };
   try {
-    const response = await axios.post(`http://localhost:8000/${tenantId}/api/v1/appointments/store`, payload);
+    const response = await axios.post(`${baseUrl}/${tenantId}/appointments`, payload);
     return response.data;
   } catch (error) {
     console.error("Error creating booking:", error);
@@ -24,7 +25,7 @@ export const createAppointment = async (data: any, tenantId: string) => {
  */
 export async function getAppointments(tenantId: string): Promise<any> {
   try {
-    const response = await axios.get(`http://localhost:8000/${tenantId}/api/v1/appointments`);
+    const response = await axios.get(`${baseUrl}/${tenantId}/appointments`);
     return response.data;
   } catch (error) {
     console.error('Something went wrong while fetching appointments: ', error);
@@ -33,7 +34,7 @@ export async function getAppointments(tenantId: string): Promise<any> {
 }
 
 export async function getServices(tenantId: string): Promise<AxiosResponse> {
-  const response = await axios.get(`http://localhost:8000/${tenantId}/api/v1/services`);
+  const response = await axios.get(`${baseUrl}/${tenantId}/services`);
   return response;
 }
 
@@ -43,7 +44,7 @@ export async function getServices(tenantId: string): Promise<AxiosResponse> {
  */
 export async function getTeamMembers(tenantId: string): Promise<any> {
   try {
-    const response = await axios.get(`http://localhost:8000/${tenantId}/api/v1/team/members`);
+    const response = await axios.get(`${baseUrl}/${tenantId}/team/members`);
     return response;
   } catch (error) {
     console.error('Something went wrong while fetching team members: ', error);

@@ -37,10 +37,6 @@ interface DayOff {
   repeat: boolean
 }
 
-interface DayEntry {
-  // Define this interface based on your data structure
-}
-
 export interface Company {
   id: number | undefined
   image: string
@@ -85,3 +81,20 @@ export interface TeamMember {
   workSchedule?: WorkScheduleDay[];
   daysOff?: DayOff[];
 }
+
+type PartialService = Pick<Service, 'id' | 'name' | 'category' | 'duration'>
+
+export interface Employee {
+  id: number;
+  fullName: string;
+  email: string;
+  phone: string;
+  notes: string;
+  visibility: number;
+  colorCode: string;
+  services: PartialService[];
+  schedule: DayEntry[];
+  daysOff: DayOff[];
+}
+
+export interface DayEntry { day: string; entries: TimeEntry[] }

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { Form, DatePicker, TimePicker } from 'antd'
 import dayjs from 'dayjs'
-import { FormValues } from '@/components/booking/types'
+import type { FormValues } from '@/components/booking/types'
 
 interface DateTimeStepProps {
   formRef: React.RefObject<any>

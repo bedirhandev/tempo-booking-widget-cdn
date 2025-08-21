@@ -1,0 +1,197 @@
+
+export type AbsenceData = {
+id?: string;
+name: string;
+userId: string;
+startDate: string;
+endDate?: string;
+repeat: boolean;
+absenceableId?: string;
+absenceableType?: string;
+user?: UserData;
+absenceable?: Array<any>;
+};
+export type BookingData = {
+id: readonly string;
+date: string;
+time: string;
+userId: string;
+teamId?: string;
+serviceId: string;
+customerId: string;
+statusTypeId: string;
+note?: string;
+notificationEnabled: boolean;
+startDatetime: string;
+endDatetime: string;
+assignedUserName?: readonly string;
+serviceName?: readonly string;
+serviceDurationInMinutes?: readonly number;
+statusName?: readonly string;
+customerName?: readonly string;
+customerEmail?: readonly string;
+customerPhone?: readonly string;
+serviceColorCode?: readonly string;
+serviceInfo?: readonly string;
+servicePrice?: readonly number;
+categoryName?: readonly string;
+user?: readonly UserData;
+team?: readonly TeamData;
+service?: readonly ServiceData;
+customer?: readonly CustomerData;
+statusType?: readonly StatusTypeData;
+participants?: readonly Array<UserData>;
+};
+export type BookingSettingData = {
+id: string;
+defaultTimeSlotStep: number;
+useServiceDuration: boolean;
+advanceBookingPeriod: number;
+};
+export type CategoryData = {
+id?: string;
+name: string;
+services?: Array<ServiceData>;
+servicesCount?: number;
+};
+export type CompanyData = {
+id: string;
+image?: string;
+name?: string;
+address?: string;
+website?: string;
+phone?: string;
+email?: string;
+logoUrl?: string;
+displayName?: string;
+};
+export type CustomerData = {
+id?: string;
+fullName: string;
+email: string;
+phone?: string;
+notes?: string;
+isRegistered: boolean;
+bookings?: Array<BookingData>;
+};
+export type EventData = {
+id: string;
+title: string;
+startDate: string;
+endDate: string;
+userId: string;
+description?: string;
+user?: UserData;
+color: string;
+};
+export type NotificationData = {
+id?: string;
+statusTypeId: string;
+notificationName: string;
+recipient: string;
+notificationEnabled: boolean;
+services?: Array<any>;
+subject: string;
+messageText?: string;
+messageHtml?: string;
+isBuiltIn: boolean;
+statusType?: StatusTypeData;
+};
+export type NotificationSettingData = {
+id: string;
+mailService?: string;
+smtpHost?: string;
+smtpPort?: string;
+smtpSecure?: string;
+smtpUsername?: string;
+smtpEmail?: string;
+smtpPassword?: string;
+notifyCustomersByDefault: boolean;
+};
+export type ServiceData = {
+id: string;
+categoryId: string;
+name: string;
+price: number;
+colorCode?: string;
+info?: string;
+hours: number;
+minutes: number;
+duration?: number;
+durationFormatted?: string;
+category?: CategoryData;
+users?: Array<UserData>;
+bookings?: Array<BookingData>;
+timeEntries?: Array<TimeEntryData>;
+};
+export type StatusTypeData = {
+id: string;
+name: string;
+bookings?: Array<BookingData>;
+notifications?: Array<NotificationData>;
+};
+export type TeamData = {
+id: string;
+name: string;
+description?: string;
+members?: Array<TeamMemberData>;
+users?: Array<UserData>;
+bookings?: Array<BookingData>;
+invitations?: Array<TeamInvitationData>;
+};
+export type TeamInvitationData = {
+id: string;
+teamId: string;
+email: string;
+fullName: string;
+role: string;
+token: string;
+status: string;
+expiresAt: string;
+createdAt: string;
+team?: TeamData;
+};
+export type TeamMemberData = {
+id: string;
+teamId: string;
+userId: string;
+role: string;
+fullName: string;
+email: string;
+phoneNumber?: string;
+bio?: string;
+notes?: string;
+status: string;
+displayColor?: string;
+visibility: number;
+joinedAt?: string;
+team?: TeamData;
+user?: UserData;
+};
+export type TimeEntryData = {
+id: string;
+dayOfWeek: DayOfWeek;
+entryType: EntryType;
+timePeriod: string;
+timeableId?: string;
+timeableType?: string;
+startTime?: string;
+endTime?: string;
+dayName?: string;
+timeable?: Array<any>;
+services?: Array<ServiceData>;
+};
+export type UserData = {
+id: string;
+name: string;
+email?: string;
+globalId?: string;
+services?: Array<ServiceData>;
+absences?: Array<AbsenceData>;
+timeEntries?: Array<TimeEntryData>;
+role: readonly string;
+permissions: readonly Array<string>;
+};
+
+export type DayOfWeek = '1' | '2' | '3' | '4' | '5' | '6' | '7';
+export type EntryType = 'work' | 'break';

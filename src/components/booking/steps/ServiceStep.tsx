@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo } from 'react'
 import { DatePicker, Form, Select, Row, Col } from 'antd'
-import { FormValues } from '@/components/booking/types'
+import type { FormValues } from '@/components/booking/types'
 import dayjs, { Dayjs } from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import minMax from 'dayjs/plugin/minMax'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
-import { transformMemberToEmployee } from '@/teamMembers/functions'
+import { transformMemberToEmployee } from '@/components/booking/functions'
 
 dayjs.extend(isoWeek)
 dayjs.extend(isSameOrBefore)
@@ -137,11 +137,11 @@ const transformEmployeeData = (data: any[]): Employee[] => {
       // Extract daysOff from empData
       const daysOff: DayOff[] = empData.DaysOff
         ? empData.DaysOff.map((dayOffData: any) => ({
-            key: dayOffData.key,
-            name: dayOffData.name,
-            date: dayOffData.date,
-            repeat: dayOffData.repeat
-          }))
+          key: dayOffData.key,
+          name: dayOffData.name,
+          date: dayOffData.date,
+          repeat: dayOffData.repeat
+        }))
         : []
 
       const servicesOfferedSet = new Set<string>()
@@ -591,7 +591,7 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
     updateFormValues(allValues)
   }
 
-  function formatLocalTime(timeStr, locale = 'en-US') {
+  function formatLocalTime(timeStr: string, locale = 'en-US') {
     if (timeStr == undefined) return
     const [hour, minute] = timeStr.split(':').map(Number)
     const date = new Date()
@@ -618,7 +618,7 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
   const updateFormValues = (allValues: any) => {
     const selectedService = services.find((service) => service.id == allValues.service);
     const startTime = formatLocalTime(allValues.time, navigator.language);
-    
+
     // Calculate time range if we have a service with duration
     let timeRange = startTime;
     if (selectedService && selectedService.duration && allValues.time) {
@@ -703,29 +703,31 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
               </div>
             )}
             <Select placeholder='Select a time' allowClear>
-              {availableTimes.map(({ time, disabled, injected }) => {
+              {availableTimes.map(({ time, disabled }) => {
+                //injected
                 // Calculate the end time based on service duration
                 const selectedService = services.find(s => s.id === selectedServiceId);
                 const serviceDuration = selectedService ? selectedService.duration : 0;
-                
+
                 const startTimeMoment = dayjs(time, 'HH:mm');
                 const endTimeMoment = startTimeMoment.add(serviceDuration, 'minute');
                 const timeDisplay = `${time} - ${endTimeMoment.format('HH:mm')}`;
-                
+
                 return (
                   <Select.Option
                     key={time}
                     value={time}
                     disabled={disabled}
-                    style={injected ? { color: '#d46b08', fontWeight: 600 } : {}}
+                  //`style={injected ? { color: '#d46b08', fontWeight: 600 } : {}}
                   >
-                    {injected ? (
+                    {timeDisplay}
+                    {/*injected ? (
                       <>
                         {timeDisplay} <span style={{ color: '#d46b08' }}>(original time)</span>
                       </>
                     ) : (
                       timeDisplay
-                    )}
+                    )*/}
                   </Select.Option>
                 );
               })}

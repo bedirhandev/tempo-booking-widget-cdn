@@ -1,4 +1,4 @@
-import { useNotifications } from '@/hooks/use-notifications';
+import { useNotifications } from '@/components/booking/use-notifications';
 
 export interface ApiResponse<T = any> {
   data?: T;
