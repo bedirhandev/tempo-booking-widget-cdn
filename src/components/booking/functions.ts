@@ -28,19 +28,7 @@ export function transformTimeEntriesToSchedule(timeEntries: TimeEntryData[]): Da
       id: parseInt(entry.id, 10),
       timePeriod: entry.timePeriod,
       type: entry.entryType as string,
-      services: (entry.services || []).map(service => ({
-        id: parseInt(service.id, 10),
-        name: service.name,
-        category: service.category ? {
-          id: parseInt(service.category.id || '0', 10),
-          name: service.category.name
-        } : { id: 0, name: '' },
-        duration: {
-          id: 0,
-          hours: service.hours || 0,
-          minutes: service.minutes || 0
-        }
-      }))
+      services: (entry.services || []).map(service => parseInt(service.id, 10))
     });
   });
   return Object.entries(groupedMap).map(([day, entries]) => ({ day, entries }));
@@ -54,13 +42,13 @@ export function transformTimeEntriesToSchedule(timeEntries: TimeEntryData[]): Da
 export function transformMemberToEmployee(member: TeamMember): Employee {
   return {
     id: member.id || 0, // Assuming that if id is undefined, it defaults to 0
-    FullName: member.fullName,
-    Email: member.email,
-    Phone: member.phone,
-    Notes: member.notes || '',
-    Visibility: member.visibility ? 1 : 0, // Convert boolean to numeric visibility
-    ColorCode: member.colorCode,
-    Services: (member as any).user?.services?.map((service: ServiceData) => ({
+    fullName: member.fullName,
+    email: member.email,
+    phone: member.phone,
+    notes: member.notes || '',
+    visibility: member.visibility ? 1 : 0, // Convert boolean to numeric visibility
+    colorCode: member.colorCode,
+    services: (member as any).user?.services?.map((service: ServiceData) => ({
       id: parseInt(service.id, 10),
       name: service.name,
       category: service.category ? {
@@ -73,7 +61,7 @@ export function transformMemberToEmployee(member: TeamMember): Employee {
         minutes: service.minutes || 0
       }
     })) || [],
-    Schedule: transformTimeEntriesToSchedule((member as any).user?.timeEntries || []),
-    DaysOff: transformAbsencesToDaysOff((member as any).user?.absences || [])
+    schedule: transformTimeEntriesToSchedule((member as any).user?.timeEntries || []),
+    daysOff: transformAbsencesToDaysOff((member as any).user?.absences || [])
   };
 }

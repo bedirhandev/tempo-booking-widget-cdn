@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Widget Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #1677ff;
+            margin-bottom: 10px;
+        }
+        
+        .demo-section {
+            margin: 40px 0;
+            padding: 30px;
+            border: 2px dashed #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        
+        .demo-section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        .code-block code {
+            color: #d63384;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+        }
+        
+        .widget-wrapper {
+            margin: 30px 0;
+            max-width: 800px;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #1677ff;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .success-box {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗓️ Booking Widget Demo</h1>
+            <p>Experience the embeddable booking widget in action</p>
+        </div>
+
+        <div class="info-box">
+            <strong>📋 Demo Configuration:</strong><br>
+            This demo uses placeholder configuration. In a real implementation, you would replace the tenant ID and API URL with your actual values.
+        </div>
+
+        <!-- Basic Widget Demo -->
+        <div class="demo-section">
+            <h2>Basic Widget Integration</h2>
+            <p>The simplest way to embed the booking widget - just two lines of code:</p>
+            
+            <div class="code-block">
+                <code>&lt;!-- Step 1: Add container div --&gt;<br>
+&lt;div id="booking-widget" <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data-tenant-id="demo-tenant-123"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data-api-url="https://api.example.com/api/v1"&gt;&lt;/div&gt;<br><br>
+
+&lt;!-- Step 2: Add script tag --&gt;<br>
+&lt;script src="./dist/widget/booking-widget.umd.js"&gt;&lt;/script&gt;</code>
+            </div>
+
+            <div class="widget-wrapper">
+                <div id="booking-widget" 
+                     data-tenant-id="demo-tenant-123"
+                     data-api-url="http://localhost:8000/api/v1">
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Widget Demo -->
+        <div class="demo-section">
+            <h2>Customized Widget</h2>
+            <p>Widget with custom styling and configuration:</p>
+            
+            <div class="code-block">
+                <code>&lt;div class="booking-widget" <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data-tenant-id="demo-tenant-456"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data-api-url="https://api.example.com/api/v1"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data-theme="dark"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data-primary-color="#9c27b0"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data-width="600px"&gt;&lt;/div&gt;</code>
+            </div>
+
+            <div class="widget-wrapper">
+                <div class="booking-widget" 
+                     data-tenant-id="demo-tenant-456"
+                     data-api-url="http://localhost:8000/api/v1"
+                     data-theme="dark"
+                     data-primary-color="#9c27b0"
+                     data-width="600px">
+                </div>
+            </div>
+        </div>
+
+        <!-- Multiple Widgets Demo -->
+        <div class="demo-section">
+            <h2>Multiple Widgets</h2>
+            <p>You can embed multiple widgets on the same page with different configurations:</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+                <div>
+                    <h4>Light Theme Widget</h4>
+                    <div class="booking-widget" 
+                         data-tenant-id="demo-tenant-light"
+                         data-api-url="http://localhost:8000/api/v1"
+                         data-theme="light"
+                         data-primary-color="#52c41a"
+                         data-width="100%">
+                    </div>
+                </div>
+                
+                <div>
+                    <h4>Compact Widget</h4>
+                    <div class="booking-widget" 
+                         data-tenant-id="demo-tenant-compact"
+                         data-api-url="http://localhost:8000/api/v1"
+                         data-theme="light"
+                         data-primary-color="#fa8c16"
+                         data-width="100%">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- JavaScript API Demo -->
+        <div class="demo-section">
+            <h2>JavaScript API</h2>
+            <p>Advanced usage with JavaScript callbacks and programmatic control:</p>
+            
+            <div class="code-block">
+                <code>&lt;script&gt;<br>
+// Global configuration for callbacks<br>
+window.BookingWidgetConfig = {<br>
+&nbsp;&nbsp;onBookingComplete: function(bookingData) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;console.log('Booking completed:', bookingData);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;alert('Booking successful!');<br>
+&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;onError: function(error) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;console.error('Booking error:', error);<br>
+&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;onLoad: function(widgetId) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;console.log('Widget loaded:', widgetId);<br>
+&nbsp;&nbsp;}<br>
+};<br>
+&lt;/script&gt;</code>
+            </div>
+
+            <div class="success-box">
+                <strong>🔄 Live Demo Features:</strong><br>
+                • Open browser console to see widget events<br>
+                • All booking attempts will show success/error notifications<br>
+                • Widget instances are tracked and can be controlled via JavaScript
+            </div>
+        </div>
+
+        <!-- Integration Instructions -->
+        <div class="demo-section">
+            <h2>Quick Integration Guide</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                <div style="text-align: center; padding: 20px; background: white; border-radius: 8px;">
+                    <h3 style="color: #1677ff;">1. 📁 Get Files</h3>
+                    <p>Download the widget files from your CDN or build them locally</p>
+                </div>
+                <div style="text-align: center; padding: 20px; background: white; border-radius: 8px;">
+                    <h3 style="color: #52c41a;">2. 📋 Copy Code</h3>
+                    <p>Add the container div and script tag to your website</p>
+                </div>
+                <div style="text-align: center; padding: 20px; background: white; border-radius: 8px;">
+                    <h3 style="color: #fa8c16;">3. ⚙️ Configure</h3>
+                    <p>Set your tenant ID and API URL in the data attributes</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>
+                <strong>📚 Documentation:</strong> 
+                <a href="./WIDGET_DOCUMENTATION.md">Integration Guide</a> | 
+                <a href="./EMBEDDABLE_WIDGET_PLAN.md">Technical Specification</a>
+            </p>
+            <p>Booking Widget Demo - Built with React, TypeScript & Ant Design</p>
+        </div>
+    </div>
+
+    <!-- Widget Configuration Script -->
+    <script>
+        // Global configuration for widget callbacks
+        window.BookingWidgetConfig = {
+            onBookingComplete: function(bookingData) {
+                console.log('🎉 Booking completed successfully:', bookingData);
+                
+                // Show success notification
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #52c41a;
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    z-index: 10000;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                `;
+                notification.innerHTML = '✅ Booking completed successfully!';
+                document.body.appendChild(notification);
+                
+                // Remove notification after 3 seconds
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            },
+            
+            onError: function(error) {
+                console.error('❌ Booking widget error:', error);
+                
+                // Show error notification
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #ff4d4f;
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    z-index: 10000;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                `;
+                notification.innerHTML = '⚠️ Booking error occurred';
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            },
+            
+            onLoad: function(widgetId) {
+                console.log('📦 Widget loaded with ID:', widgetId);
+            }
+        };
+
+        // Listen for widget ready event
+        window.addEventListener('bookingWidgetReady', function(event) {
+            console.log('🚀 All widgets initialized:', event.detail);
+        });
+
+        // Demo: Log all widget events
+        ['bookingWidgetComplete', 'bookingWidgetError', 'bookingWidgetReady'].forEach(eventName => {
+            window.addEventListener(eventName, function(event) {
+                console.log(`📡 Widget Event: ${eventName}`, event.detail);
+            });
+        });
+    </script>
+
+    <!-- Load the booking widget -->
+    <script src="./dist/widget/booking-widget.umd.js"></script>
+    
+    <!-- Fallback message if script fails to load -->
+    <script>
+        setTimeout(function() {
+            if (!window.BookingWidget) {
+                const widgets = document.querySelectorAll('#booking-widget, .booking-widget');
+                widgets.forEach(widget => {
+                    widget.innerHTML = `
+                        <div style="padding: 40px; text-align: center; border: 2px dashed #ff4d4f; border-radius: 8px; color: #ff4d4f;">
+                            <h3>⚠️ Widget Loading Error</h3>
+                            <p>The booking widget could not be loaded. Please ensure:</p>
+                            <ul style="text-align: left; display: inline-block;">
+                                <li>The widget script is built: <code>npm run build:widget</code></li>
+                                <li>The file path is correct: <code>./dist/widget/booking-widget.umd.js</code></li>
+                                <li>Your API server is running on the configured URL</li>
+                            </ul>
+                        </div>
+                    `;
+                });
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

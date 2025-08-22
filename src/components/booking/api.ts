@@ -1,8 +1,8 @@
 import axios, { type AxiosResponse } from "axios";
 
-const baseUrl: string = 'http://localhost:8000/api/v1';
+const defaultBaseUrl: string = 'http://localhost:8000/api/v1';
 
-export const createAppointment = async (data: any, tenantId: string) => {
+export const createAppointment = async (data: any, tenantId: string, baseUrl: string = defaultBaseUrl) => {
   const pad = (n: number) => n.toString().padStart(2, "0");
   const payload = {
     ...data,
@@ -23,7 +23,7 @@ export const createAppointment = async (data: any, tenantId: string) => {
  * Get appointments.
  * @returns {Promise<any>} API response with the list of appointments.
  */
-export async function getAppointments(tenantId: string): Promise<any> {
+export async function getAppointments(tenantId: string, baseUrl: string = defaultBaseUrl): Promise<any> {
   try {
     const response = await axios.get(`${baseUrl}/${tenantId}/appointments`);
     return response.data;
@@ -33,7 +33,7 @@ export async function getAppointments(tenantId: string): Promise<any> {
   }
 }
 
-export async function getServices(tenantId: string): Promise<AxiosResponse> {
+export async function getServices(tenantId: string, baseUrl: string = defaultBaseUrl): Promise<AxiosResponse> {
   const response = await axios.get(`${baseUrl}/${tenantId}/services`);
   return response;
 }
@@ -42,7 +42,7 @@ export async function getServices(tenantId: string): Promise<AxiosResponse> {
  * Get team members.
  * @returns {Promise<any>} API response with the list of team members.
  */
-export async function getTeamMembers(tenantId: string): Promise<any> {
+export async function getTeamMembers(tenantId: string, baseUrl: string = defaultBaseUrl): Promise<any> {
   try {
     const response = await axios.get(`${baseUrl}/${tenantId}/team/members`);
     return response;

@@ -70,9 +70,17 @@ const initialFormValues = {
 
 interface AppointmentBookingFormProps {
   tenantId?: string;
+  apiUrl?: string;
+  onBookingComplete?: (bookingData: any) => void;
+  onError?: (error: any) => void;
 }
 
-const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({ tenantId = 'default' }) => {
+const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
+  tenantId = 'default',
+  apiUrl,
+  onBookingComplete,
+  onError
+}) => {
   const [current, setCurrent] = useState(0)
   const [formValues, setFormValues] = useState<FormValues>(initialFormValues)
   const [bookingValues, setBookingValues] = useState<Booking>(initialBookingState)
@@ -97,7 +105,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({ tenantI
   const [messageApi, contextHolder] = message.useMessage({ top: wpadminbarHeight })
 
 
-  const { handleApiResponse, handleApiError, notifications } = useApiNotifications();
+  const { handleApiResponse, notifications } = useApiNotifications();
 
   const forms = {
     serviceForm: React.createRef<any>(),
@@ -171,7 +179,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({ tenantI
       setSubmitting(true)
       messageApi.loading({ content: 'Processing your appointment...', key: 'booking' })
 
-      const { id, Notes, ...customerData } = customerValues
+      const { Notes } = customerValues
 
       /*await apiClient.post(
         '/book-appointment',
@@ -208,7 +216,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({ tenantI
       };
 
       const loadingToast = notifications.loading('Creating booking...');
-      const response = await createAppointment(booking, tenantId);
+      const response = await createAppointment(booking, tenantId, apiUrl);
       notifications.dismiss(loadingToast);
 
       handleApiResponse(response, 'Booking created successfully');
@@ -220,6 +228,16 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({ tenantI
       })
 
       setBookingSuccessful(true)
+      
+      // Call the onBookingComplete callback if provided
+      if (onBookingComplete) {
+        onBookingComplete({
+          booking: booking,
+          formValues: formValues,
+          customerValues: customerValues,
+          bookingValues: bookingValues
+        })
+      }
 
     } catch (error: unknown) {
       // If it's an Axios error, check specifics
@@ -265,6 +283,11 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({ tenantI
           duration: 2,
         });
       }
+      
+      // Call the onError callback if provided
+      if (onError) {
+        onError(error)
+      }
     } finally {
       setSubmitting(false) // End submission
     }
@@ -289,9 +312,9 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({ tenantI
 
     try {
       const [appointmentsResponse, servicesResponse, employeesResponse] = await Promise.all([
-        getAppointments(tenantId),
-        getServices(tenantId),
-        getTeamMembers(tenantId)
+        getAppointments(tenantId, apiUrl),
+        getServices(tenantId, apiUrl),
+        getTeamMembers(tenantId, apiUrl)
       ])
       setRawBookingData(appointmentsResponse)
       setRawServiceData(servicesResponse.data)

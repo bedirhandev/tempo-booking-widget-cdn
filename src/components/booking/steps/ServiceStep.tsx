@@ -129,13 +129,13 @@ const transformEmployeeData = (data: any[]): Employee[] => {
   data = data.map(transformMemberToEmployee);
 
   return data
-    .filter((empData) => empData.Visibility !== 0 && empData.Visibility !== false)
+    .filter((empData) => empData.visibility !== 0 && empData.visibility !== false)
     .map((empData) => {
       const id = String(empData.id)
-      const name = empData.FullName
+      const name = empData.fullName
 
       // Extract daysOff from empData
-      const daysOff: DayOff[] = empData.DaysOff
+      const daysOff: DayOff[] = empData.daysOff
         ? empData.DaysOff.map((dayOffData: any) => ({
           key: dayOffData.key,
           name: dayOffData.name,
@@ -151,8 +151,8 @@ const transformEmployeeData = (data: any[]): Employee[] => {
         }
       } = {}
 
-      if (empData.Schedule && Object.keys(empData.Schedule).length > 0) {
-        for (const dayName of empData.Schedule) {
+      if (empData.schedule && Object.keys(empData.schedule).length > 0) {
+        for (const dayName of empData.schedule) {
           const dayOfWeek = dayOfWeekMap[dayName?.day]
           const daySchedule = dayName;//empData.Schedule[dayOfWeek]
           if (daySchedule.entries) {
@@ -295,36 +295,6 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
     disabled: boolean
   }
 
-  // Available Days of Week
-  const availableDaysOfWeek = useMemo(() => {
-    if (!selectedServiceId) {
-      return new Set<number>()
-    }
-    const daysOfWeekSet = new Set<number>()
-
-    employees.forEach((employee) => {
-      // Exclude employees on days off
-      const availableDates = new Set<number>()
-      for (let i = 1; i <= 7; i++) {
-        const dummyDate = dayjs().isoWeekday(i)
-        if (!isEmployeeDayOff(employee, dummyDate) && !isCompanyDayOff(company, dummyDate)) {
-          availableDates.add(i)
-        }
-      }
-      employee.schedule.forEach((schedule) => {
-        if (schedule.serviceId === selectedServiceId) {
-          const dayTimeRanges = schedule.dayTimeRanges
-          Object.keys(dayTimeRanges).forEach((dayOfWeekStr) => {
-            const dayOfWeek = parseInt(dayOfWeekStr)
-            if (availableDates.has(dayOfWeek)) {
-              daysOfWeekSet.add(dayOfWeek)
-            }
-          })
-        }
-      })
-    })
-    return daysOfWeekSet
-  }, [selectedServiceId, employees, company])
 
   // Available Times
   // Enhanced: Inject original booking time if not present in available slots
@@ -649,26 +619,6 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
     }))
   }
 
-  /**
-   * Converts a total number of minutes into a formatted string of hours and minutes.
-   *
-   * @param totalMinutes - The total number of minutes to convert.
-   * @returns A string formatted as "Xh Ym", "Xh", or "Ym".
-   */
-  const getDuration = (totalMinutes: number): string => {
-    if (totalMinutes < 0) {
-      throw new Error('Total minutes cannot be negative.')
-    }
-    const hours = Math.floor(totalMinutes / 60)
-    const minutes = totalMinutes % 60
-    if (hours > 0 && minutes > 0) {
-      return `${hours}h ${minutes}m`
-    } else if (hours > 0) {
-      return `${hours}h`
-    } else {
-      return `${minutes}m`
-    }
-  }
 
   const formatPrice = (price: number, currency: string = '$'): string => {
     return `${currency}${price.toFixed(2)}`

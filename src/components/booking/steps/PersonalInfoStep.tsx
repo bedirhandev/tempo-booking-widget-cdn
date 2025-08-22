@@ -32,7 +32,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({ formRef, setFormVal
     additionalNotes: customerValues.Notes
   }
 
-  const onValuesChange = (changedValues: any) => {
+  const onValuesChange = () => {
     // Fetch the updated form values after resetting the time field
     const allValues = form.getFieldsValue()
 
