@@ -65,3 +65,22 @@ src/
 - **`src/components/booking/types.ts`** - TypeScript interfaces for booking data
 - **`src/components/booking/steps/`** - Individual step components for the booking flow
 - **`src/styles/App.css`** - Main application styles
+
+## CDN Usage
+
+```html
+<!-- Latest version -->
+<div id="booking-widget"
+     data-tenant-id="your-tenant-id"
+     data-api-url="https://your-api.com/api/v1">
+</div>
+<script src="https://cdn.jsdelivr.net/gh/yourusername/booking-widget-cdn@latest/dist/widget/booking-widget.umd.js"></script>
+```
+
+## Specific Version
+```html
+<script src="https://cdn.jsdelivr.net/gh/yourusername/booking-widget-cdn@v1.0.0/dist/widget/booking-widget.umd.js"></script>
+```
+
+## Demo
+See `dist/demo.html` for a complete integration example.
