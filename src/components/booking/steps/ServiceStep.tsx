@@ -136,7 +136,7 @@ const transformEmployeeData = (data: any[]): Employee[] => {
 
       // Extract daysOff from empData
       const daysOff: DayOff[] = empData.daysOff
-        ? empData.DaysOff.map((dayOffData: any) => ({
+        ? empData.daysOff.map((dayOffData: any) => ({
           key: dayOffData.key,
           name: dayOffData.name,
           date: dayOffData.date,
@@ -151,25 +151,24 @@ const transformEmployeeData = (data: any[]): Employee[] => {
         }
       } = {}
 
-      if (empData.schedule && Object.keys(empData.schedule).length > 0) {
-        for (const dayName of empData.schedule) {
-          const dayOfWeek = dayOfWeekMap[dayName?.day]
-          const daySchedule = dayName;//empData.Schedule[dayOfWeek]
-          if (daySchedule.entries) {
-            daySchedule.entries.forEach((entry: any) => {
+      if (empData.schedule && empData.schedule.length > 0) {
+        for (const dayEntry of empData.schedule) {
+          const dayOfWeek = dayOfWeekMap[dayEntry.day]
+          if (dayEntry.entries && dayOfWeek) {
+            dayEntry.entries.forEach((entry: any) => {
               if (entry.type === 'work' && entry.services && entry.services.length > 0) {
                 const [start, end] = entry.timePeriod.split(' - ')
                 const timeRange = { start, end }
-                entry.services.forEach((service: any) => {
-                  const serviceId = String(service.id)
-                  servicesOfferedSet.add(serviceId)
-                  if (!serviceSchedules[serviceId]) {
-                    serviceSchedules[serviceId] = { dayTimeRanges: {} }
+                entry.services.forEach((serviceId: number) => {
+                  const serviceIdStr = String(serviceId)
+                  servicesOfferedSet.add(serviceIdStr)
+                  if (!serviceSchedules[serviceIdStr]) {
+                    serviceSchedules[serviceIdStr] = { dayTimeRanges: {} }
                   }
-                  if (!serviceSchedules[serviceId].dayTimeRanges[dayOfWeek]) {
-                    serviceSchedules[serviceId].dayTimeRanges[dayOfWeek] = []
+                  if (!serviceSchedules[serviceIdStr].dayTimeRanges[dayOfWeek]) {
+                    serviceSchedules[serviceIdStr].dayTimeRanges[dayOfWeek] = []
                   }
-                  serviceSchedules[serviceId].dayTimeRanges[dayOfWeek].push(timeRange)
+                  serviceSchedules[serviceIdStr].dayTimeRanges[dayOfWeek].push(timeRange)
                 })
               }
             })
