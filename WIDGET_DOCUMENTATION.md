@@ -265,7 +265,7 @@ If your site uses CSP, add these directives:
 - No sensitive information is stored in browser storage
 - Widget communicates only with your configured API endpoint
 
-## 🐛 Troubleshooting
+## 🔧 Troubleshooting
 
 ### Widget Not Appearing
 1. **Check the console** for JavaScript errors
