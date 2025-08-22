@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗓️ Booking Widget - Integration Documentation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1677ff;
+            border-bottom: 3px solid #1677ff;
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+        h3 {
+            color: #34495e;
+            margin-top: 1.5rem;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+        pre {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            position: relative;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+            border: none;
+            color: #333;
+            display: block;
+            white-space: pre;
+        }
+        .highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        .highlight pre {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .highlight pre code {
+            color: white;
+            background: transparent;
+        }
+        .success-box {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        .nav-links {
+            background: #e9ecef;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 2rem;
+        }
+        .nav-links a {
+            color: #1677ff;
+            text-decoration: none;
+            margin-right: 1rem;
+            font-weight: 500;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        .emoji {
+            font-size: 1.2em;
+        }
+        ul, ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+        li {
+            margin: 0.5rem 0;
+        }
+        .copy-btn {
+            background: #1677ff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+        }
+        .copy-btn:hover {
+            background: #0958d9;
+        }
+        .back-link {
+            display: inline-block;
+            background: #6c757d;
+            color: white;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        .back-link:hover {
+            background: #5a6268;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../demo.html" class="back-link">← Back to Demo</a>
+        
+        <h1><span class="emoji">🗓️</span> Booking Widget - Integration Documentation</h1>
+
+        <div class="nav-links">
+            <strong>Quick Navigation:</strong>
+            <a href="#quick-start">Quick Start</a>
+            <a href="#installation">Installation</a>
+            <a href="#configuration">Configuration</a>
+            <a href="#platforms">Platform Guides</a>
+            <a href="#troubleshooting">Troubleshooting</a>
+        </div>
+
+        <section id="quick-start">
+            <h2><span class="emoji">📋</span> Quick Start Guide</h2>
+            <p>The Booking Widget is a simple, embeddable solution that allows your users to book appointments directly on your website with minimal setup.</p>
+
+            <div class="highlight">
+                <h3 style="color: white;"><span class="emoji">⚡</span> 2-Minute Integration</h3>
+                <p><strong>1. Add the container</strong> where you want the widget to appear:</p>
+                <pre><code>&lt;div id="booking-widget" 
+     data-tenant-id="your-tenant-id"
+     data-api-url="https://your-api.com/api/v1"&gt;&lt;/div&gt;</code></pre>
+
+                <p><strong>2. Add the widget script</strong> before the closing <code style="color: black;">&lt;/body&gt;</code> tag:</p>
+                <pre><code>&lt;script src="https://cdn.your-domain.com/booking-widget.js"&gt;&lt;/script&gt;</code></pre>
+
+                <div class="success-box">
+                    <strong>That's it!</strong> Your booking widget is now live on your website. <span class="emoji">🎉</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="installation">
+            <h2><span class="emoji">📦</span> Installation Options</h2>
+
+            <h3>Option 1: CDN (Recommended)</h3>
+            <pre><code>&lt;script src="https://cdn.jsdelivr.net/npm/booking-widget@latest/dist/booking-widget.min.js"&gt;&lt;/script&gt;</code></pre>
+
+            <h3>Option 2: Self-Hosted</h3>
+            <ol>
+                <li>Download the widget files from the releases page</li>
+                <li>Upload <code>booking-widget.js</code> to your server</li>
+                <li>Reference it in your HTML:</li>
+            </ol>
+            <pre><code>&lt;script src="/path/to/booking-widget.js"&gt;&lt;/script&gt;</code></pre>
+
+            <h3>Option 3: Local Development</h3>
+            <ol>
+                <li>Clone the repository</li>
+                <li>Run <code>npm run build:widget</code></li>
+                <li>Use the generated file from <code>dist/widget/booking-widget.umd.js</code></li>
+            </ol>
+        </section>
+
+        <section id="configuration">
+            <h2><span class="emoji">⚙️</span> Configuration Options</h2>
+
+            <h3>Required Parameters</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Description</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>data-tenant-id</code></td>
+                        <td>Your unique tenant identifier</td>
+                        <td><code>"your-company-123"</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>data-api-url</code></td>
+                        <td>Your booking API base URL</td>
+                        <td><code>"https://api.example.com/api/v1"</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Optional Parameters</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Description</th>
+                        <th>Default</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>data-theme</code></td>
+                        <td>Widget color theme</td>
+                        <td><code>"light"</code></td>
+                        <td><code>"dark"</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>data-primary-color</code></td>
+                        <td>Primary color (hex)</td>
+                        <td><code>"#1677ff"</code></td>
+                        <td><code>"#9c27b0"</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>data-width</code></td>
+                        <td>Widget width</td>
+                        <td><code>"100%"</code></td>
+                        <td><code>"800px"</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>data-height</code></td>
+                        <td>Widget height</td>
+                        <td><code>"auto"</code></td>
+                        <td><code>"600px"</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>data-language</code></td>
+                        <td>Interface language</td>
+                        <td><code>"en"</code></td>
+                        <td><code>"es"</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Configuration Examples</h3>
+
+            <h4>Basic Widget</h4>
+            <pre><code>&lt;div id="booking-widget" 
+     data-tenant-id="demo-tenant"
+     data-api-url="https://api.example.com/api/v1"&gt;
+&lt;/div&gt;</code></pre>
+
+            <h4>Customized Widget</h4>
+            <pre><code>&lt;div id="booking-widget" 
+     data-tenant-id="demo-tenant"
+     data-api-url="https://api.example.com/api/v1"
+     data-theme="dark"
+     data-primary-color="#9c27b0"
+     data-width="600px"&gt;
+&lt;/div&gt;</code></pre>
+        </section>
+
+        <section id="platforms">
+            <h2><span class="emoji">🌐</span> Platform Integration Guides</h2>
+
+            <h3>WordPress</h3>
+            <p><strong>Method 1: HTML Block</strong></p>
+            <ol>
+                <li>Add an HTML block in the WordPress editor</li>
+                <li>Paste the widget code</li>
+                <li>Publish your page</li>
+            </ol>
+
+            <p><strong>Method 2: Functions.php</strong></p>
+            <pre><code>function add_booking_widget_script() {
+    wp_enqueue_script('booking-widget', 'https://cdn.your-domain.com/booking-widget.js', array(), '1.0.0', true);
+}
+add_action('wp_enqueue_scripts', 'add_booking_widget_script');</code></pre>
+
+            <h3>Shopify</h3>
+            <ol>
+                <li>Go to <strong>Online Store</strong> > <strong>Themes</strong> > <strong>Actions</strong> > <strong>Edit Code</strong></li>
+                <li>Open <code>theme.liquid</code> and add before <code>&lt;/body&gt;</code>:</li>
+            </ol>
+            <pre><code>&lt;script src="https://cdn.your-domain.com/booking-widget.js"&gt;&lt;/script&gt;</code></pre>
+            <ol start="3">
+                <li>Add the widget div to any template where needed</li>
+            </ol>
+
+            <h3>Squarespace</h3>
+            <ol>
+                <li>Go to <strong>Settings</strong> > <strong>Advanced</strong> > <strong>Code Injection</strong></li>
+                <li>Add to <strong>Header</strong> or <strong>Footer</strong>:</li>
+            </ol>
+            <pre><code>&lt;script src="https://cdn.your-domain.com/booking-widget.js"&gt;&lt;/script&gt;</code></pre>
+            <ol start="3">
+                <li>Add a Code Block to your page with the widget div</li>
+            </ol>
+        </section>
+
+        <section id="troubleshooting">
+            <h2><span class="emoji">🔧</span> Troubleshooting</h2>
+
+            <h3>Widget Not Appearing</h3>
+            <ol>
+                <li><strong>Check the console</strong> for JavaScript errors</li>
+                <li><strong>Verify script loading</strong>: Look for <code>BookingWidget loaded successfully</code> message</li>
+                <li><strong>Check required attributes</strong>: Ensure <code>data-tenant-id</code> and <code>data-api-url</code> are present</li>
+                <li><strong>API connectivity</strong>: Test if your API endpoint is accessible</li>
+            </ol>
+
+            <h3>Styling Issues</h3>
+            <ol>
+                <li><strong>Check CSS conflicts</strong>: The widget uses prefixed classes to avoid conflicts</li>
+                <li><strong>Theme issues</strong>: Ensure the theme value is either <code>"light"</code> or <code>"dark"</code></li>
+                <li><strong>Color format</strong>: Primary color must be a valid hex color (e.g., <code>#1677ff</code>)</li>
+            </ol>
+
+            <h3>Common Error Messages</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Error</th>
+                        <th>Cause</th>
+                        <th>Solution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>"Missing required attributes"</td>
+                        <td>No tenant-id or api-url</td>
+                        <td>Add required data attributes</td>
+                    </tr>
+                    <tr>
+                        <td>"Invalid API URL format"</td>
+                        <td>Malformed URL</td>
+                        <td>Use complete URL with protocol</td>
+                    </tr>
+                    <tr>
+                        <td>"Widget initialization failed"</td>
+                        <td>JavaScript error</td>
+                        <td>Check browser console</td>
+                    </tr>
+                    <tr>
+                        <td>"API connection failed"</td>
+                        <td>Network/CORS issue</td>
+                        <td>Check API configuration</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <div style="margin-top: 3rem; padding: 1.5rem; background: #f8f9fa; border-radius: 6px; text-align: center;">
+            <h3><span class="emoji">📞</span> Need Help?</h3>
+            <p>For detailed technical information and advanced integration, see the <a href="EMBEDDABLE_WIDGET_PLAN.html">Technical Specification</a>.</p>
+            <p>Having issues? Check the <a href="../demo.html">demo page</a> for a working example.</p>
+        </div>
+    </div>
+
+    <script>
+        // Add copy buttons to code blocks
+        document.querySelectorAll('pre code').forEach((block) => {
+            const button = document.createElement('button');
+            button.className = 'copy-btn';
+            button.textContent = 'Copy';
+            button.onclick = () => {
+                navigator.clipboard.writeText(block.textContent);
+                button.textContent = 'Copied!';
+                setTimeout(() => button.textContent = 'Copy', 2000);
+            };
+            block.parentNode.appendChild(button);
+        });
+    </script>
+</body>
+</html>
