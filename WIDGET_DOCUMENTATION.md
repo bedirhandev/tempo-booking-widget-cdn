@@ -693,8 +693,8 @@ Create a test HTML file:
 <head><title>Widget CDN Test</title></head>
 <body>
     <div id="booking-widget"
-         data-tenant-id="10e7c063-e054-4e30-ae97-c62d489dea76"
-         data-api-url="http://localhost:8000/api/v1">
+         data-tenant-id="dd8e3fbf-e864-4adb-871f-9b2c84328651"
+         data-api-url="https://app.tempo-booking.com/api/v1">
     </div>
     <script src="https://cdn.jsdelivr.net/gh/yourusername/booking-widget-cdn@v1.0.0/dist/widget/booking-widget.umd.js"></script>
 </body>

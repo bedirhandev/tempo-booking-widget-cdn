@@ -49,7 +49,7 @@ function App() {
           </div>
 
           <div style={{ padding: '40px 20px' }}>
-            <AppointmentBookingForm tenantId="10e7c063-e054-4e30-ae97-c62d489dea76" />
+            <AppointmentBookingForm tenantId="dd8e3fbf-e864-4adb-871f-9b2c84328651" />
           </div>
         </div>
 

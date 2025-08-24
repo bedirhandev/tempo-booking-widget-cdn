@@ -1,6 +1,6 @@
 import axios, { type AxiosResponse } from "axios";
 
-const defaultBaseUrl: string = 'http://localhost:8000/api/v1';
+const defaultBaseUrl: string = 'https://app.tempo-booking.com/api/v1';
 
 export const createAppointment = async (data: any, tenantId: string, baseUrl: string = defaultBaseUrl) => {
   const pad = (n: number) => n.toString().padStart(2, "0");
