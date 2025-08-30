@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Steps, Button, message, Card, Skeleton, Row, Col } from 'antd'
+import { Steps, Button, message, Card, Row, Col } from 'antd'
 import ServiceStep from '@/components/booking/steps/ServiceStep'
 import PersonalInfoStep from '@/components/booking/steps/PersonalInfoStep'
 import SummaryStep from '@/components/booking/steps/SummaryStep'
