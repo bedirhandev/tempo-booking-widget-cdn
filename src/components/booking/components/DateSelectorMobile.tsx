@@ -53,7 +53,7 @@ const DateInput = forwardRef<any, DateInputProps>(
     // Convert disabledDate function for antd-mobile DatePicker
     const mobileFilter = disabledDate
       ? {
-        day: (val: number, extend: { date: Date }) => {
+        day: (_val: number, extend: { date: Date }) => {
           const dayjsDate = dayjs(extend.date);
           return !disabledDate(dayjsDate); // Note: antd-mobile filter returns true for enabled dates
         }

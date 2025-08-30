@@ -1,7 +1,6 @@
 // PersonalInfoStepMobile.tsx
-import React, { forwardRef, useImperativeHandle, useState, useRef } from 'react'
+import React, { useImperativeHandle, useState } from 'react'
 import { Input, TextArea } from 'antd-mobile'
-import { CloseCircleFilled } from '@ant-design/icons'
 import type { FormValues } from '@/components/booking/types'
 
 interface Customer {

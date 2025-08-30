@@ -2,7 +2,7 @@
 import React, { useState, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { Form } from 'antd';
 import { Selector } from 'antd-mobile';
-import { ClockCircleOutlined, CloseCircleFilled, DownOutlined } from '@ant-design/icons';
+import { ClockCircleOutlined, CloseCircleFilled } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 interface AvailableTime {
