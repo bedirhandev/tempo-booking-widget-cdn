@@ -1,11 +1,15 @@
-import { ConfigProvider } from 'antd'
+import { ConfigProvider as AntdConfigProvider } from 'antd';
+import { ConfigProvider as AntdMobileConfigProvider } from 'antd-mobile';
 import { Toaster } from 'sonner'
 import AppointmentBookingForm from '@/components/booking/AppointmentBookingForm'
 import '@/styles/App.css'
+import enUS from 'antd/locale/en_US';
+import enUSMobile from 'antd-mobile/es/locales/en-US';
 
 function App() {
   return (
-    <ConfigProvider
+    <AntdConfigProvider
+      locale={enUS}
       theme={{
         token: {
           colorPrimary: '#1677ff',
@@ -13,66 +17,68 @@ function App() {
         },
       }}
     >
-      <div className="app-container" style={{
-        minHeight: '100vh',
-        backgroundColor: '#f5f5f5',
-        padding: '20px'
-      }}>
-        <div style={{
-          maxWidth: '800px',
-          margin: '0 auto',
-          backgroundColor: '#fff',
-          borderRadius: '8px',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-          overflow: 'hidden'
+      <AntdMobileConfigProvider locale={enUSMobile}>
+        <div className="app-container" style={{
+          minHeight: '100vh',
+          backgroundColor: '#f5f5f5',
+          padding: '20px'
         }}>
           <div style={{
-            background: 'linear-gradient(135deg, #1677ff 0%, #69c0ff 100%)',
-            padding: '40px 20px',
-            textAlign: 'center',
-            color: '#fff'
+            maxWidth: '800px',
+            margin: '0 auto',
+            backgroundColor: '#fff',
+            borderRadius: '8px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            overflow: 'hidden'
           }}>
-            <h1 style={{
-              margin: '0 0 10px 0',
-              fontSize: '32px',
-              fontWeight: 'bold'
+            <div style={{
+              background: 'linear-gradient(135deg, #1677ff 0%, #69c0ff 100%)',
+              padding: '40px 20px',
+              textAlign: 'center',
+              color: '#fff'
             }}>
-              Book Your Appointment
-            </h1>
-            <p style={{
-              margin: '0',
-              fontSize: '16px',
-              opacity: 0.9
-            }}>
-              Choose your service, select your preferred time, and provide your details
-            </p>
+              <h1 style={{
+                margin: '0 0 10px 0',
+                fontSize: '32px',
+                fontWeight: 'bold'
+              }}>
+                Book Your Appointment
+              </h1>
+              <p style={{
+                margin: '0',
+                fontSize: '16px',
+                opacity: 0.9
+              }}>
+                Choose your service, select your preferred time, and provide your details
+              </p>
+            </div>
+
+            <div style={{ padding: '40px 20px' }}>
+              <AppointmentBookingForm tenantId="dd8e3fbf-e864-4adb-871f-9b2c84328651" />
+            </div>
           </div>
 
-          <div style={{ padding: '40px 20px' }}>
-            <AppointmentBookingForm tenantId="dd8e3fbf-e864-4adb-871f-9b2c84328651" />
+          <div style={{
+            textAlign: 'center',
+            marginTop: '40px',
+            color: '#666'
+          }}>
+            <p>Demo Booking Widget - Built with React, TypeScript & Ant Design</p>
           </div>
         </div>
 
-        <div style={{
-          textAlign: 'center',
-          marginTop: '40px',
-          color: '#666'
-        }}>
-          <p>Demo Booking Widget - Built with React, TypeScript & Ant Design</p>
-        </div>
-      </div>
-
-      <Toaster
-        position="top-right"
-        expand={true}
-        richColors
-        closeButton
-        toastOptions={{
-          duration: 4000,
-          className: 'toast-custom',
-        }}
-      />
-    </ConfigProvider>
+        <Toaster
+          position="top-right"
+          expand={true}
+          richColors
+          closeButton
+          toastOptions={{
+            duration: 4000,
+            className: 'toast-custom',
+          }}
+        />
+      </AntdMobileConfigProvider>
+    </AntdConfigProvider>
   )
 }
 

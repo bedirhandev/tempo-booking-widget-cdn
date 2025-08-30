@@ -8,6 +8,10 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import minMax from 'dayjs/plugin/minMax'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import { transformMemberToEmployee } from '@/components/booking/functions'
+import ServiceSelector from '../components/ServiceSelector'
+import DateSelector from '../components/DateSelector'
+import TimeSelector from '../components/TimeSelector'
+import EmployeeSelector from '../components/EmployeeSelector'
 
 dayjs.extend(isoWeek)
 dayjs.extend(isSameOrBefore)
@@ -626,74 +630,40 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
   return (
     <Form form={form} layout='vertical' initialValues={initialFormValues} onValuesChange={onValuesChange}>
       {/* Service Field */}
-      <Form.Item label='Service' name='service' required rules={[{ required: true, message: 'Please select a service' }]}>
-        <Select placeholder='Select a service' allowClear>
-          {services.map((service) => (
-            <Select.Option key={service.id} value={service.id}>
-              {service.name} ({formatPrice(service.price)})
-            </Select.Option>
-          ))}
-        </Select>
-      </Form.Item>
+      <ServiceSelector
+        services={services}
+        formatPrice={formatPrice}
+      />
       {/* Date and Time Fields */}
       <Row gutter={16}>
         <Col xs={24} sm={12}>
-          <Form.Item label='Date' name='date' required rules={[{ required: true, message: 'Please select a date' }]}>
-            <DatePicker allowClear style={{ width: '100%' }} disabledDate={disabledDate} />
-          </Form.Item>
+          <DateSelector
+            name="date"
+            label="Date"
+            placeholder="Select a date"
+            disabledDate={disabledDate}
+            allowClear
+          />
         </Col>
         <Col xs={24} sm={12}>
-          <Form.Item label='Time' name='time' required rules={[{ required: true, message: 'Please select a time' }]}>
-            {/* Show warning if original booking time is injected */}
-            {availableTimes.some((t: any) => t.injected) && (
-              <div style={{ color: '#d46b08', marginBottom: 8 }}>
-                <span role="img" aria-label="warning" style={{ marginRight: 4 }}>⚠️</span>
-                This booking was created with a time that does not match the current slot settings. You can keep this time or select a new valid slot.
-              </div>
-            )}
-            <Select placeholder='Select a time' allowClear>
-              {availableTimes.map(({ time, disabled }) => {
-                //injected
-                // Calculate the end time based on service duration
-                const selectedService = services.find(s => s.id === selectedServiceId);
-                const serviceDuration = selectedService ? selectedService.duration : 0;
-
-                const startTimeMoment = dayjs(time, 'HH:mm');
-                const endTimeMoment = startTimeMoment.add(serviceDuration, 'minute');
-                const timeDisplay = `${time} - ${endTimeMoment.format('HH:mm')}`;
-
-                return (
-                  <Select.Option
-                    key={time}
-                    value={time}
-                    disabled={disabled}
-                  //`style={injected ? { color: '#d46b08', fontWeight: 600 } : {}}
-                  >
-                    {timeDisplay}
-                    {/*injected ? (
-                      <>
-                        {timeDisplay} <span style={{ color: '#d46b08' }}>(original time)</span>
-                      </>
-                    ) : (
-                      timeDisplay
-                    )*/}
-                  </Select.Option>
-                );
-              })}
-            </Select>
-          </Form.Item>
+          <TimeSelector
+            name="time"
+            label="Time"
+            placeholder="Select a time"
+            availableTimes={availableTimes}
+            serviceDuration={
+              services.find(s => s.id === selectedServiceId)?.duration || 0
+            }
+            allowClear
+          />
         </Col>
       </Row>
       {/* Employee Field */}
-      <Form.Item label='Employee' name='employee' required rules={[{ required: true, message: 'Please select an employee' }]}>
-        <Select placeholder='Select an employee' allowClear>
-          {availableEmployees.map(({ employee, disabled }) => (
-            <Select.Option key={employee.id} value={employee.id} disabled={disabled}>
-              {employee.name}
-            </Select.Option>
-          ))}
-        </Select>
-      </Form.Item>
+      <EmployeeSelector
+        availableEmployees={availableEmployees}
+        placeholder="Select an employee"
+        allowClear
+      />
     </Form>
   )
 }

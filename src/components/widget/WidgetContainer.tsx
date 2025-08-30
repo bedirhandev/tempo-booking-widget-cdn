@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import { ConfigProvider } from 'antd'
+import { ConfigProvider as AntdConfigProvider } from 'antd'
+import { ConfigProvider as AntdMobileConfigProvider } from 'antd-mobile'
 import { Toaster } from 'sonner'
 import AppointmentBookingForm from '@/components/booking/AppointmentBookingForm'
 import type { WidgetConfig } from '@/types/widget'
 import '@/styles/widget.css'
+import enUS from 'antd/locale/en_US'
+import enUSMobile from 'antd-mobile/es/locales/en-US'
 
 interface WidgetContainerProps {
   config: WidgetConfig
@@ -105,42 +108,44 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
   }
 
   return (
-    <ConfigProvider theme={antdTheme}>
-      <div className="booking-widget-wrapper" data-widget-id={widgetId}>
-        {/* Widget Header */}
-        <div className="booking-widget-header">
-          <h1>Book Your Appointment</h1>
-          <p>Choose your service, select your preferred time, and provide your details</p>
-        </div>
+    <AntdConfigProvider theme={antdTheme} locale={enUS}>
+      <AntdMobileConfigProvider locale={enUSMobile}>
+        <div className="booking-widget-wrapper" data-widget-id={widgetId}>
+          {/* Widget Header */}
+          <div className="booking-widget-header">
+            <h1>Book Your Appointment</h1>
+            <p>Choose your service, select your preferred time, and provide your details</p>
+          </div>
 
-        {/* Widget Content */}
-        <div className="booking-widget-content">
-          <AppointmentBookingForm 
-            tenantId={config.tenantId}
-            apiUrl={config.apiUrl}
-            onBookingComplete={handleBookingComplete}
-            onError={handleError}
+          {/* Widget Content */}
+          <div className="booking-widget-content">
+            <AppointmentBookingForm 
+              tenantId={config.tenantId}
+              apiUrl={config.apiUrl}
+              onBookingComplete={handleBookingComplete}
+              onError={handleError}
+            />
+          </div>
+
+          {/* Toast notifications positioned relative to widget */}
+          <Toaster
+            position="top-right"
+            expand={true}
+            richColors
+            closeButton
+            toastOptions={{
+              duration: 4000,
+              className: 'booking-widget-toast',
+              style: {
+                fontFamily: 'var(--bw-font-family)',
+              }
+            }}
+            // Use a container selector to keep toasts within the widget
+            visibleToasts={5}
           />
         </div>
-
-        {/* Toast notifications positioned relative to widget */}
-        <Toaster
-          position="top-right"
-          expand={true}
-          richColors
-          closeButton
-          toastOptions={{
-            duration: 4000,
-            className: 'booking-widget-toast',
-            style: {
-              fontFamily: 'var(--bw-font-family)',
-            }
-          }}
-          // Use a container selector to keep toasts within the widget
-          visibleToasts={5}
-        />
-      </div>
-    </ConfigProvider>
+      </AntdMobileConfigProvider>
+    </AntdConfigProvider>
   )
 }
 

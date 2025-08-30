@@ -1,3 +1,5 @@
+import type { Dayjs } from "dayjs"
+
 export interface FormValues {
   service?: string
   employee?: string
@@ -98,3 +100,23 @@ export interface Employee {
 }
 
 export interface DayEntry { day: string; entries: TimeEntry[] }
+
+export interface Booking {
+  id: string
+  serviceId: string | undefined
+  employeeId: string | undefined
+  customerId: string | undefined
+  note: string | undefined
+  notificationEnabled: boolean
+  date: Dayjs | null
+  time: string | undefined
+}
+
+export interface Customer {
+  id: string
+  FullName: string
+  Email: string
+  Phone?: string
+  Notes?: string
+  isRegistered?: boolean
+}

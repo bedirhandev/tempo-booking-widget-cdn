@@ -1,5 +1,8 @@
+// PersonalInfoStep.tsx
 import React, { useEffect } from 'react'
 import { Form, Input, Row, Col } from 'antd'
+import { useIsMobile } from '../hooks/useIsMobile'
+import PersonalInfoStepMobile from './PersonalInfoStepMobile'
 import type { FormValues } from '@/components/booking/types'
 
 interface Customer {
@@ -18,7 +21,15 @@ interface PersonalInfoStepProps {
   setCustomerValues: React.Dispatch<React.SetStateAction<Customer>>
 }
 
-const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({ formRef, setFormValues, customerValues, setCustomerValues }) => {
+const PersonalInfoStep: React.FC<PersonalInfoStepProps> = (props) => {
+  const isMobile = useIsMobile()
+
+  if (isMobile) {
+    return <PersonalInfoStepMobile {...props} />
+  }
+
+  // Desktop version
+  const { formRef, setFormValues, customerValues, setCustomerValues } = props
   const [form] = Form.useForm()
 
   useEffect(() => {
@@ -65,19 +76,6 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({ formRef, setFormVal
       <Form.Item label='Full Name' name='fullName' rules={[{ required: true, message: 'Please enter your full name!' }]}>
         <Input name='fullName' placeholder='Enter your full name' allowClear />
       </Form.Item>
-      {/*<Row gutter={16}>
-        <Col span={12}>
-          <Form.Item label='First Name' name='firstName' rules={[{ required: true, message: 'Please enter your first name!' }]}>
-            <Input name='firstName' placeholder='Enter your first name' allowClear />
-          </Form.Item>
-        </Col>
-
-        <Col span={12}>
-          <Form.Item label='Last Name' name='lastName' rules={[{ required: true, message: 'Please enter your last name!' }]}>
-            <Input name='lastName' placeholder='Enter your last name' allowClear />
-          </Form.Item>
-        </Col>
-      </Row>*/}
       <Row gutter={16}>
         <Col xs={24} sm={12}>
           <Form.Item
