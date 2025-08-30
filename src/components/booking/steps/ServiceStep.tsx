@@ -637,12 +637,12 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
       </Form.Item>
       {/* Date and Time Fields */}
       <Row gutter={16}>
-        <Col span={12}>
+        <Col xs={24} sm={12}>
           <Form.Item label='Date' name='date' required rules={[{ required: true, message: 'Please select a date' }]}>
             <DatePicker allowClear style={{ width: '100%' }} disabledDate={disabledDate} />
           </Form.Item>
         </Col>
-        <Col span={12}>
+        <Col xs={24} sm={12}>
           <Form.Item label='Time' name='time' required rules={[{ required: true, message: 'Please select a time' }]}>
             {/* Show warning if original booking time is injected */}
             {availableTimes.some((t: any) => t.injected) && (

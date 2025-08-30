@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Steps, Button, message, Card, Skeleton } from 'antd'
+import { Steps, Button, message, Card, Skeleton, Row, Col } from 'antd'
 import ServiceStep from '@/components/booking/steps/ServiceStep'
 import PersonalInfoStep from '@/components/booking/steps/PersonalInfoStep'
 import SummaryStep from '@/components/booking/steps/SummaryStep'
@@ -228,7 +228,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
       })
 
       setBookingSuccessful(true)
-      
+
       // Call the onBookingComplete callback if provided
       if (onBookingComplete) {
         onBookingComplete({
@@ -283,7 +283,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
           duration: 2,
         });
       }
-      
+
       // Call the onError callback if provided
       if (onError) {
         onError(error)
@@ -337,26 +337,42 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
       <Card>
         {submitting ? (
           <>
-            <Skeleton.Input active size={'small'} block={true} style={{ width: '60%' }} />
             <div style={{ marginTop: 16 }}>
-              <SummaryStepSkeleton />
+              <SummaryStepSkeleton
+                loadingText='Processing booking details...'
+                subText='This usually takes a few seconds'
+              />
             </div>
-            <div className='steps-action' style={{ marginTop: 24, textAlign: 'right' }}>
-              <Button type='primary' onClick={onReset} disabled={loading || submitting}>
-                Finish
-              </Button>
+            <div className='steps-action' style={{ marginTop: 24 }}>
+              <Row>
+                <Col xs={24}>
+                  <Button
+                    type='primary'
+                    block
+                    onClick={onReset}
+                    disabled={loading || submitting}
+                    loading={submitting} // Shows a spinner in the button
+                  >
+                    {submitting ? 'Processing...' : 'Finish'}
+                  </Button>
+                </Col>
+              </Row>
             </div>
           </>
         ) : bookingSuccessful ? (
           <>
-            <p>Your appointment has been booked successfully!</p>
+            <p style={{ marginTop: 0 }}>Your appointment has been booked successfully!</p>
             <div style={{ marginTop: 16 }}>
               <SummaryStep formValues={formValues} />
             </div>
-            <div className='steps-action' style={{ marginTop: 24, textAlign: 'right' }}>
-              <Button type='primary' onClick={onReset}>
-                Finish
-              </Button>
+            <div className='steps-action' style={{ marginTop: 24 }}>
+              <Row>
+                <Col xs={24}>
+                  <Button type='primary' block onClick={onReset}>
+                    Finish
+                  </Button>
+                </Col>
+              </Row>
             </div>
           </>
         ) : (
@@ -367,15 +383,30 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
               ))}
             </Steps>
             <div className='steps-content'>{steps[current].content}</div>
-            <div className='steps-action' style={{ marginTop: 24, textAlign: 'right' }}>
-              {current > 0 && (
-                <Button style={{ margin: '0 8px' }} onClick={() => prev()} disabled={loading || submitting}>
-                  Previous
-                </Button>
-              )}
-              <Button type='primary' onClick={() => next()} disabled={loading || submitting}>
-                {current === steps.length - 1 ? 'Submit' : 'Next'}
-              </Button>
+            <div className='steps-action'>
+              <Row gutter={[16, 16]}>
+                {current > 0 && (
+                  <Col xs={24} sm={12}>
+                    <Button
+                      block
+                      onClick={() => prev()}
+                      disabled={loading || submitting}
+                    >
+                      Previous
+                    </Button>
+                  </Col>
+                )}
+                <Col xs={24} sm={current > 0 ? 12 : 24}>
+                  <Button
+                    type='primary'
+                    block
+                    onClick={() => next()}
+                    disabled={loading || submitting}
+                  >
+                    {current === steps.length - 1 ? 'Submit' : 'Next'}
+                  </Button>
+                </Col>
+              </Row>
             </div>
           </>
         )}

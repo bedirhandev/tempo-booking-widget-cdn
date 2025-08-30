@@ -10,12 +10,12 @@ const ServiceStepSkeleton: React.FC = () => {
 			</Form.Item>
 			{/* Date and Time Fields */}
 			<Row gutter={16}>
-				<Col span={12}>
+				<Col xs={24} sm={12}>
 					<Form.Item label='Date' required={true}>
 						<Skeleton.Input active block size='default' />
 					</Form.Item>
 				</Col>
-				<Col span={12}>
+				<Col xs={24} sm={12}>
 					<Form.Item label='Time' required={true}>
 						<Skeleton.Input active block size='default' />
 					</Form.Item>

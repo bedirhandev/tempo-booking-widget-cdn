@@ -309,17 +309,16 @@
     padding: 20px 10px;
   }
   
-  .booking-widget-container .steps-action {
-    text-align: center;
+  /* Touch-friendly form inputs */
+  .booking-widget-container .ant-input,
+  .booking-widget-container .ant-select-selector,
+  .booking-widget-container .ant-picker {
+    min-height: 44px;
   }
   
-  .booking-widget-container .steps-action .ant-btn {
-    margin: 4px;
-    width: 100%;
-  }
-  
-  .booking-widget-container .steps-action .ant-btn + .ant-btn {
-    margin-left: 4px;
+  /* Enhanced form spacing */
+  .booking-widget-container .ant-form-item {
+    margin-bottom: 20px;
   }
 }
 

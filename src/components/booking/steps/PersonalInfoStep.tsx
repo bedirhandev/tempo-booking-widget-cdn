@@ -79,7 +79,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({ formRef, setFormVal
         </Col>
       </Row>*/}
       <Row gutter={16}>
-        <Col span={12}>
+        <Col xs={24} sm={12}>
           <Form.Item
             label='Email'
             name='email'
@@ -91,7 +91,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({ formRef, setFormVal
             <Input name='email' placeholder='Enter your email' allowClear />
           </Form.Item>
         </Col>
-        <Col span={12}>
+        <Col xs={24} sm={12}>
           <Form.Item label='Phone Number' name='phoneNumber'>
             <Input name='phoneNumber' placeholder='Enter your phone number' allowClear />
           </Form.Item>

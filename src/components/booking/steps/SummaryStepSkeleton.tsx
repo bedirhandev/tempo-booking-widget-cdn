@@ -1,43 +1,43 @@
-// SummaryStepSkeleton.tsx
 import React from 'react'
-import { Skeleton, Descriptions } from 'antd'
+import { Spin, Typography } from 'antd'
 
-const SummaryStepSkeleton: React.FC = () => {
+const { Text } = Typography
+
+interface SummaryStepSkeletonProps {
+  loadingText?: string
+  subText?: string
+}
+
+const SummaryStepSkeleton: React.FC<SummaryStepSkeletonProps> = ({
+  loadingText = "Loading booking details...",
+  subText
+}) => {
   return (
-    <>
-      {/* Skeleton for the success message */}
-      {/*<Skeleton active paragraph={{ rows: 1, width: '60%' }} style={{ marginBottom: 16 }} />*/}
-      <Descriptions bordered column={1} size={'middle'} title={<Skeleton.Input active size={'small'} style={{ width: 200 }} />}>
-        <Descriptions.Item label={<Skeleton.Input active style={{ width: 100 }} />}>
-          <Skeleton.Input active style={{ width: 200 }} />
-        </Descriptions.Item>
-        <Descriptions.Item label={<Skeleton.Input active style={{ width: 100 }} />}>
-          <Skeleton.Input active style={{ width: 100 }} />
-        </Descriptions.Item>
-        <Descriptions.Item label={<Skeleton.Input active style={{ width: 100 }} />}>
-          <Skeleton.Input active style={{ width: 150 }} />
-        </Descriptions.Item>
-        <Descriptions.Item label={<Skeleton.Input active style={{ width: 100 }} />}>
-          <Skeleton.Input active style={{ width: 100 }} />
-        </Descriptions.Item>
-        <Descriptions.Item label={<Skeleton.Input active style={{ width: 100 }} />}>
-          <Skeleton.Input active style={{ width: 200 }} />
-        </Descriptions.Item>
-        <Descriptions.Item label={<Skeleton.Input active style={{ width: 100 }} />}>
-          <Skeleton.Input active style={{ width: 200 }} />
-        </Descriptions.Item>
-        <Descriptions.Item label={<Skeleton.Input active style={{ width: 100 }} />}>
-          <Skeleton.Input active style={{ width: 250 }} />
-        </Descriptions.Item>
-        <Descriptions.Item label={<Skeleton.Input active style={{ width: 100 }} />}>
-          <Skeleton.Input active style={{ width: 150 }} />
-        </Descriptions.Item>
-        <Descriptions.Item label={<Skeleton.Input active style={{ width: 100 }} />}>
-          <Skeleton.Input active style={{ width: 150 }} />
-          {/*<Skeleton active paragraph={{ rows: 2 }} />*/}
-        </Descriptions.Item>
-      </Descriptions>
-    </>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: 300,
+      gap: 16,
+      padding: '40px 20px',
+      backgroundColor: '#fafafa',
+      borderRadius: 8
+    }}>
+      <Spin size="large" />
+      <div style={{ textAlign: 'center' }}>
+        <Text style={{ fontSize: 14, color: '#262626' }}>
+          {loadingText}
+        </Text>
+        {subText && (
+          <div style={{ marginTop: 4 }}>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {subText}
+            </Text>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
