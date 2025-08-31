@@ -1,13 +1,14 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import WidgetContainer from '@/components/widget/WidgetContainer'
-import { 
-  parseConfigFromElement, 
-  validateConfig, 
-  generateWidgetId, 
+import {
+  parseConfigFromElement,
+  validateConfig,
+  generateWidgetId,
   applyConfigToElement,
   getGlobalConfig
 } from './config'
+import { initializeAntdMobile, cleanupAntdMobile } from './antd-mobile-init'
 import type { WidgetInstance, WidgetConfig } from '@/types/widget'
 
 class BookingWidgetLoader {
@@ -18,6 +19,9 @@ class BookingWidgetLoader {
    * Initialize a widget instance on a specific element
    */
   public init(config: WidgetConfig, element?: HTMLElement): WidgetInstance {
+    // Initialize antd-mobile configuration before any rendering
+    initializeAntdMobile();
+    
     let targetElement = element
 
     if (!targetElement) {
@@ -53,6 +57,10 @@ class BookingWidgetLoader {
         root.unmount()
         targetElement.remove()
         this.instances.delete(widgetId)
+        // Clean up antd-mobile configuration when widget is destroyed
+        if (this.instances.size === 0) {
+          cleanupAntdMobile()
+        }
       },
       updateConfig: (newConfig: Partial<WidgetConfig>) => {
         const updatedConfig = { ...config, ...newConfig }
@@ -98,6 +106,9 @@ class BookingWidgetLoader {
       console.warn('BookingWidget: Already initialized')
       return
     }
+
+    // Initialize antd-mobile globally before any widgets are created
+    initializeAntdMobile()
 
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
@@ -173,6 +184,8 @@ class BookingWidgetLoader {
     this.instances.forEach(instance => instance.destroy())
     this.instances.clear()
     this.isInitialized = false
+    // Clean up antd-mobile configuration
+    cleanupAntdMobile()
   }
 
   /**

@@ -1,6 +1,8 @@
 // App.tsx
 import { ConfigProvider as AntdConfigProvider } from 'antd';
 import { ConfigProvider as AntdMobileConfigProvider } from 'antd-mobile';
+// Import antd-mobile global styles - this is why it works in dev mode
+import 'antd-mobile/es/global';
 import { Toaster } from 'sonner'
 import AppointmentBookingForm from '@/components/booking/AppointmentBookingForm'
 import AppointmentBookingFormMobile from '@/components/booking/AppointmentBookingFormMobile';

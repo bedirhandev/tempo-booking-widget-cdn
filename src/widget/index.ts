@@ -1,6 +1,19 @@
 // Embeddable Booking Widget Entry Point
 // This file serves as the main entry for the embeddable widget bundle
 
+// CRITICAL: Import antd-mobile global styles first
+// This ensures all antd-mobile components render correctly
+import 'antd-mobile/es/global'
+
+// Import and initialize antd-mobile configuration BEFORE anything else
+import { initializeAntdMobile } from './antd-mobile-init'
+
+// Initialize antd-mobile as early as possible to prevent Chinese locale
+if (typeof window !== 'undefined') {
+  console.log('[BookingWidget] Early initialization of antd-mobile...')
+  initializeAntdMobile()
+}
+
 import './loader'
 import '@/styles/widget.css'
 
@@ -42,6 +55,9 @@ if (typeof window !== 'undefined') {
     
     // Add widget version to global scope for debugging
     window.BOOKING_WIDGET_VERSION = WIDGET_VERSION
+    
+    // Ensure antd-mobile is initialized (double-check)
+    initializeAntdMobile()
   }
 }
 
