@@ -62,7 +62,7 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
   const handleBookingComplete = (bookingData: any) => {
     try {
       onBookingComplete?.(bookingData)
-      
+
       // Dispatch custom event for external listeners
       const event = new CustomEvent('bookingWidgetComplete', {
         detail: { bookingData, widgetId }
@@ -78,7 +78,7 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
       <div className="booking-widget-error">
         <h3>Widget Error</h3>
         <p>{error}</p>
-        <button 
+        <button
           className="ant-btn ant-btn-primary"
           onClick={() => {
             setError(null)
@@ -126,15 +126,15 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
 
       {/* Widget Content */}
       <div className="booking-widget-content">
-        {!isMobile ? (
-          <AppointmentBookingFormMobile 
+        {isMobile ? (
+          <AppointmentBookingFormMobile
             tenantId={config.tenantId}
             apiUrl={config.apiUrl}
             onBookingComplete={handleBookingComplete}
             onError={handleError}
           />
         ) : (
-          <AppointmentBookingForm 
+          <AppointmentBookingForm
             tenantId={config.tenantId}
             apiUrl={config.apiUrl}
             onBookingComplete={handleBookingComplete}
@@ -162,7 +162,7 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
   )
 
   // Render with appropriate ConfigProvider based on device type
-  if (!isMobile) {
+  if (isMobile) {
     return (
       <AntdMobileConfigProvider locale={enUSMobile}>
         <WidgetContent />
