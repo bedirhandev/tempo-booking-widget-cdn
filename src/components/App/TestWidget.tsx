@@ -1,0 +1,75 @@
+// src/pages/TestWidget.tsx
+import React from 'react'
+import WidgetContainer from '@/components/widget/WidgetContainer'
+import type { WidgetConfig } from '@/types/widget'
+
+const TestWidget: React.FC = () => {
+    // Configuration for the widget
+    const widgetConfig: WidgetConfig = {
+        tenantId: 'dd8e3fbf-e864-4adb-871f-9b2c84328651', // Your tenant ID
+        apiUrl: 'http://localhost:3000/api', // Your API URL (optional)
+        primaryColor: '#1677ff', // Optional: custom primary color
+        theme: 'light', // Optional: 'light' or 'dark'
+    }
+
+    // Handle booking completion
+    const handleBookingComplete = (bookingData: any) => {
+        console.log('Booking completed:', bookingData)
+        // You can add custom logic here, like:
+        // - Show a success message
+        // - Redirect to another page
+        // - Send analytics events
+    }
+
+    // Handle errors
+    const handleError = (error: any) => {
+        console.error('Booking error:', error)
+        // You can add custom error handling here
+    }
+
+    // Handle widget load
+    const handleLoad = (widgetId: string) => {
+        console.log('Widget loaded with ID:', widgetId)
+    }
+
+    return (
+        <div style={{
+            minHeight: '100vh',
+            backgroundColor: '#f5f5f5',
+            padding: '20px'
+        }}>
+            <div style={{
+                maxWidth: '800px',
+                margin: '0 auto'
+            }}>
+                <h1 style={{ marginBottom: '30px', textAlign: 'center' }}>
+                    Widget Test Page
+                </h1>
+
+                {/* The Widget Container */}
+                <WidgetContainer
+                    config={widgetConfig}
+                    onBookingComplete={handleBookingComplete}
+                    onError={handleError}
+                    onLoad={handleLoad}
+                />
+
+                {/* Debug info */}
+                <div style={{
+                    marginTop: '40px',
+                    padding: '20px',
+                    backgroundColor: '#fff',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}>
+                    <h3>Debug Information</h3>
+                    <pre style={{ fontSize: '12px' }}>
+                        {JSON.stringify(widgetConfig, null, 2)}
+                    </pre>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+export default TestWidget

@@ -2,7 +2,7 @@
 import React, { useState, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { Form } from 'antd';
 import { Picker } from 'antd-mobile';
-import { ClockCircleOutlined, CloseCircleFilled } from '@ant-design/icons';
+import { ClockCircleOutline, CloseCircleFill } from 'antd-mobile-icons';
 import type { PickerColumn } from 'antd-mobile/es/components/picker';
 import dayjs from 'dayjs';
 
@@ -160,7 +160,7 @@ const TimeInput = forwardRef<any, TimeInputProps>(
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               {allowClear && value && isHovered ? (
-                <CloseCircleFilled
+                <CloseCircleFill
                   style={{
                     color: 'rgba(0, 0, 0, 0.25)',
                     fontSize: 14,
@@ -168,7 +168,7 @@ const TimeInput = forwardRef<any, TimeInputProps>(
                   onClick={handleClear}
                 />
               ) : null}
-              <ClockCircleOutlined
+              <ClockCircleOutline
                 style={{
                   color: 'rgba(0, 0, 0, 0.25)',
                   fontSize: 14,

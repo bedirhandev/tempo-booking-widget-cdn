@@ -2,7 +2,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { Form } from 'antd';
 import { DatePicker as MobileDatePicker } from 'antd-mobile';
-import { CalendarOutlined, CloseCircleFilled } from '@ant-design/icons';
+import { CalendarOutline, CloseCircleFill } from 'antd-mobile-icons';
 import dayjs, { Dayjs } from 'dayjs';
 
 interface DateSelectorMobileProps {
@@ -95,7 +95,7 @@ const DateInput = forwardRef<any, DateInputProps>(
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             {allowClear && value && isHovered ? (
-              <CloseCircleFilled
+              <CloseCircleFill
                 style={{
                   color: 'rgba(0, 0, 0, 0.25)',
                   fontSize: 14,
@@ -103,7 +103,7 @@ const DateInput = forwardRef<any, DateInputProps>(
                 onClick={handleClear}
               />
             ) : null}
-            <CalendarOutlined
+            <CalendarOutline
               style={{
                 color: 'rgba(0, 0, 0, 0.25)',
                 fontSize: 14,

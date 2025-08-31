@@ -2,7 +2,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { Form } from 'antd';
 import { Picker } from 'antd-mobile';
-import { DownOutlined, CloseCircleFilled } from '@ant-design/icons';
+import { DownOutline, CloseCircleFill } from 'antd-mobile-icons';
 import type { PickerColumn } from 'antd-mobile/es/components/picker';
 
 interface Service {
@@ -113,7 +113,7 @@ const ServiceInput = forwardRef<any, ServiceInputProps>(
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               {allowClear && selectedService && isHovered ? (
-                <CloseCircleFilled
+                <CloseCircleFill
                   style={{
                     color: 'rgba(0, 0, 0, 0.25)',
                     fontSize: 14,
@@ -121,7 +121,7 @@ const ServiceInput = forwardRef<any, ServiceInputProps>(
                   onClick={handleClear}
                 />
               ) : null}
-              <DownOutlined
+              <DownOutline
                 style={{
                   color: 'rgba(0, 0, 0, 0.25)',
                   fontSize: 12,

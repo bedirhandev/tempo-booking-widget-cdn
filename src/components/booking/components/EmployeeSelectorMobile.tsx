@@ -2,7 +2,7 @@
 import React, { useState, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { Form } from 'antd';
 import { Picker } from 'antd-mobile';
-import { CloseCircleFilled, DownOutlined } from '@ant-design/icons';
+import { CloseCircleFill, DownOutline } from 'antd-mobile-icons';
 import type { PickerColumn } from 'antd-mobile/es/components/picker';
 
 interface Employee {
@@ -129,7 +129,7 @@ const EmployeeInput = forwardRef<any, EmployeeInputProps>(
                         </span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             {allowClear && selectedEmployee && isHovered ? (
-                                <CloseCircleFilled
+                                <CloseCircleFill
                                     style={{
                                         color: 'rgba(0, 0, 0, 0.25)',
                                         fontSize: 14,
@@ -137,7 +137,7 @@ const EmployeeInput = forwardRef<any, EmployeeInputProps>(
                                     onClick={handleClear}
                                 />
                             ) : null}
-                            <DownOutlined
+                            <DownOutline
                                 style={{
                                     color: 'rgba(0, 0, 0, 0.25)',
                                     fontSize: 12,

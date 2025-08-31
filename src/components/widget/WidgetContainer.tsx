@@ -1,8 +1,11 @@
+// WidgetContainer.tsx
 import React, { useEffect, useState } from 'react'
 import { ConfigProvider as AntdConfigProvider } from 'antd'
 import { ConfigProvider as AntdMobileConfigProvider } from 'antd-mobile'
 import { Toaster } from 'sonner'
 import AppointmentBookingForm from '@/components/booking/AppointmentBookingForm'
+import AppointmentBookingFormMobile from '@/components/booking/AppointmentBookingFormMobile'
+import { useIsMobile } from '@/components/booking/hooks/useIsMobile'
 import type { WidgetConfig } from '@/types/widget'
 import '@/styles/widget.css'
 import enUS from 'antd/locale/en_US'
@@ -21,6 +24,7 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
   onError,
   onLoad
 }) => {
+  const isMobile = useIsMobile()
   const [isLoaded, setIsLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -37,7 +41,7 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
     return () => clearTimeout(timer)
   }, [onLoad, widgetId])
 
-  // Create theme configuration for Ant Design
+  // Create theme configuration for Ant Design (desktop only)
   const antdTheme = {
     token: {
       colorPrimary: config.primaryColor || '#1677ff',
@@ -107,44 +111,68 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
     )
   }
 
+  // Widget content component
+  const WidgetContent = () => (
+    <div className="booking-widget-wrapper" data-widget-id={widgetId}>
+      {/* Widget Header */}
+      <div className="booking-widget-header">
+        <h1 style={{ fontSize: isMobile ? '24px' : '32px' }}>
+          Book Your Appointment
+        </h1>
+        <p style={{ fontSize: isMobile ? '14px' : '16px' }}>
+          Choose your service, select your preferred time, and provide your details
+        </p>
+      </div>
+
+      {/* Widget Content */}
+      <div className="booking-widget-content">
+        {!isMobile ? (
+          <AppointmentBookingFormMobile 
+            tenantId={config.tenantId}
+            apiUrl={config.apiUrl}
+            onBookingComplete={handleBookingComplete}
+            onError={handleError}
+          />
+        ) : (
+          <AppointmentBookingForm 
+            tenantId={config.tenantId}
+            apiUrl={config.apiUrl}
+            onBookingComplete={handleBookingComplete}
+            onError={handleError}
+          />
+        )}
+      </div>
+
+      {/* Toast notifications positioned relative to widget */}
+      <Toaster
+        position={isMobile ? "bottom-center" : "top-right"}
+        expand={!isMobile}
+        richColors
+        closeButton
+        toastOptions={{
+          duration: 4000,
+          className: 'booking-widget-toast',
+          style: {
+            fontFamily: 'var(--bw-font-family)',
+          }
+        }}
+        visibleToasts={isMobile ? 3 : 5}
+      />
+    </div>
+  )
+
+  // Render with appropriate ConfigProvider based on device type
+  if (!isMobile) {
+    return (
+      <AntdMobileConfigProvider locale={enUSMobile}>
+        <WidgetContent />
+      </AntdMobileConfigProvider>
+    )
+  }
+
   return (
     <AntdConfigProvider theme={antdTheme} locale={enUS}>
-      <AntdMobileConfigProvider locale={enUSMobile}>
-        <div className="booking-widget-wrapper" data-widget-id={widgetId}>
-          {/* Widget Header */}
-          <div className="booking-widget-header">
-            <h1>Book Your Appointment</h1>
-            <p>Choose your service, select your preferred time, and provide your details</p>
-          </div>
-
-          {/* Widget Content */}
-          <div className="booking-widget-content">
-            <AppointmentBookingForm 
-              tenantId={config.tenantId}
-              apiUrl={config.apiUrl}
-              onBookingComplete={handleBookingComplete}
-              onError={handleError}
-            />
-          </div>
-
-          {/* Toast notifications positioned relative to widget */}
-          <Toaster
-            position="top-right"
-            expand={true}
-            richColors
-            closeButton
-            toastOptions={{
-              duration: 4000,
-              className: 'booking-widget-toast',
-              style: {
-                fontFamily: 'var(--bw-font-family)',
-              }
-            }}
-            // Use a container selector to keep toasts within the widget
-            visibleToasts={5}
-          />
-        </div>
-      </AntdMobileConfigProvider>
+      <WidgetContent />
     </AntdConfigProvider>
   )
 }
