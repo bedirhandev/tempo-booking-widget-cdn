@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Steps, Button, Toast, Card, Grid } from 'antd-mobile'
+import { Steps, Button, Card, Grid, Result } from 'antd-mobile'
 import ServiceStepMobile from '@/components/booking/steps/ServiceStepMobile'
 import PersonalInfoStepMobile from '@/components/booking/steps/PersonalInfoStepMobile'
 import SummaryStepMobile from '@/components/booking/steps/SummaryStepMobile'
@@ -73,6 +73,13 @@ interface AppointmentBookingFormMobileProps {
     onError?: (error: any) => void;
 }
 
+interface ResultState {
+    show: boolean;
+    status: 'success' | 'error' | 'waiting';
+    title: string;
+    description?: string;
+}
+
 const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> = ({
     tenantId = 'default',
     apiUrl,
@@ -89,7 +96,13 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
     const [rawServiceData, setRawServiceData] = useState<Service[]>()
     const [company, setCompany] = useState<Company>()
     const [bookingSuccessful, setBookingSuccessful] = useState(false)
-    const [submitting, setSubmitting] = useState(false) // Add submitting state
+    const [submitting, setSubmitting] = useState(false)
+    const [resultState, setResultState] = useState<ResultState>({
+        show: false,
+        status: 'waiting',
+        title: '',
+        description: ''
+    })
 
     const { handleApiResponse } = useApiNotifications();
 
@@ -131,7 +144,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
     ]
 
     const next = async () => {
-        if (submitting) return // Prevent actions during submission
+        if (submitting) return
 
         let formRef
         if (current === 0) {
@@ -143,7 +156,6 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
             try {
                 await formRef.validateFields()
                 if (current === steps.length - 1) {
-                    // Trigger submission after Personal Information step
                     await onSubmit()
                 } else {
                     setCurrent(current + 1)
@@ -160,16 +172,16 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
         setCurrent(current - 1)
     }
 
-
     const onSubmit = async () => {
         try {
             setSubmitting(true)
 
-            // Replace messageApi.loading with Toast.show
-            Toast.show({
-                icon: 'loading',
-                content: 'Processing your appointment...',
-                duration: 0, // 0 means it won't auto-dismiss
+            // Show loading result
+            setResultState({
+                show: true,
+                status: 'waiting',
+                title: 'Processing your appointment...',
+                description: 'Please wait while we confirm your booking'
             })
 
             const { Notes } = customerValues
@@ -193,27 +205,20 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
                 time: bookingValues.time || ""
             };
 
-            // Remove notifications.loading and replace with Toast if needed
-            // If you want a second loading message:
-            // Toast.show({ icon: 'loading', content: 'Creating booking...', duration: 0 })
-
             const response = await createAppointment(booking, tenantId, apiUrl);
-
-            // Clear any loading toasts
-            Toast.clear()
 
             handleApiResponse(response, 'Booking created successfully');
 
-            // Replace messageApi.success
-            Toast.show({
-                icon: 'success',
-                content: 'Appointment booked successfully!',
-                duration: 2000, // 2 seconds in milliseconds
+            // Show success result
+            setResultState({
+                show: true,
+                status: 'success',
+                title: 'Appointment Booked Successfully!',
+                description: 'Your appointment has been confirmed. You will receive a confirmation email shortly.'
             })
 
             setBookingSuccessful(true)
 
-            // Call the onBookingComplete callback if provided
             if (onBookingComplete) {
                 onBookingComplete({
                     booking: booking,
@@ -224,59 +229,42 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
             }
 
         } catch (error: unknown) {
-            // Clear any loading toasts
-            Toast.clear()
+            let errorTitle = 'Booking Failed';
+            let errorDescription = 'An unexpected error occurred.';
 
-            // If it's an Axios error, check specifics
             if (axios.isAxiosError(error)) {
                 if (error.response) {
                     const { status, data } = error.response;
 
                     if (status === 422) {
-                        // Validation error
-                        Toast.show({
-                            icon: 'fail',
-                            content: 'Validation failed: please check the form fields.',
-                            duration: 2000,
-                        })
+                        errorTitle = 'Validation Error';
+                        errorDescription = 'Please check the form fields and try again.';
                     } else if (status === 500) {
-                        // Server error
-                        Toast.show({
-                            icon: 'fail',
-                            content: data?.message || 'A server error occurred.',
-                            duration: 2000,
-                        })
+                        errorTitle = 'Server Error';
+                        errorDescription = data?.message || 'A server error occurred. Please try again later.';
                     } else {
-                        // Other errors (400, 403, 404, etc.)
-                        Toast.show({
-                            icon: 'fail',
-                            content: data?.message || 'An error occurred during the booking.',
-                            duration: 2000,
-                        })
+                        errorTitle = 'Booking Error';
+                        errorDescription = data?.message || 'An error occurred during the booking.';
                     }
                 } else {
-                    // Possibly a network error
-                    Toast.show({
-                        icon: 'fail',
-                        content: 'Network error or server did not respond.',
-                        duration: 2000,
-                    })
+                    errorTitle = 'Network Error';
+                    errorDescription = 'Unable to connect to the server. Please check your internet connection.';
                 }
-            } else {
-                // Some non-Axios error
-                Toast.show({
-                    icon: 'fail',
-                    content: 'An unexpected error occurred.',
-                    duration: 2000,
-                })
             }
 
-            // Call the onError callback if provided
+            // Show error result
+            setResultState({
+                show: true,
+                status: 'error',
+                title: errorTitle,
+                description: errorDescription
+            })
+
             if (onError) {
                 onError(error)
             }
         } finally {
-            setSubmitting(false) // End submission
+            setSubmitting(false)
         }
     }
 
@@ -290,13 +278,17 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
         setBookingSuccessful(false)
         setCurrent(0)
         setLoading(true)
+        setResultState({
+            show: false,
+            status: 'waiting',
+            title: '',
+            description: ''
+        })
         await fetchData()
         setLoading(false)
     }
 
     const fetchData = async () => {
-        //setLoading(true)
-
         try {
             const [appointmentsResponse, servicesResponse, employeesResponse] = await Promise.all([
                 getAppointments(tenantId, apiUrl),
@@ -306,12 +298,10 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
             setRawBookingData(appointmentsResponse)
             setRawServiceData(servicesResponse.data)
             setRawEmployeeData(employeesResponse.data.data)
-            setCompany(undefined) // Company data will be handled separately
+            setCompany(undefined)
         } catch (error) {
             console.error('Something went wrong:', error)
-        } /*finally {
-      setLoading(false)
-    }*/
+        }
     }
 
     useEffect(() => {
@@ -321,43 +311,77 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
     return (
         <>
             <Card>
-                {submitting ? (
+                {resultState.show ? (
                     <>
-                        <div style={{ marginTop: 16 }}>
-                            <SummaryStepSkeletonMobile
-                                loadingText='Processing booking details...'
-                                subText='This usually takes a few seconds'
-                            />
-                        </div>
-                        <div style={{ marginTop: 24 }}>
-                            <Button
-                                color='primary'
-                                block
-                                size='middle'
-                                onClick={onReset}
-                                disabled={loading || submitting}
-                                loading={submitting}
-                            >
-                                {submitting ? 'Processing...' : 'Finish'}
-                            </Button>
-                        </div>
-                    </>
-                ) : bookingSuccessful ? (
-                    <>
-                        <p style={{ marginTop: 0 }}>Your appointment has been booked successfully!</p>
-                        <div style={{ marginTop: 16 }}>
-                            <SummaryStepMobile formValues={formValues} />
-                        </div>
-                        <div style={{ marginTop: 24 }}>
-                            <Button
-                                color='primary'
-                                block
-                                size='middle'
-                                onClick={onReset}
-                            >
-                                Finish
-                            </Button>
-                        </div>
+                        <Result
+                            status={resultState.status}
+                            title={resultState.title}
+                            description={
+                                <div style={{
+                                    fontSize: '14px',
+                                    lineHeight: '1.5',
+                                    color: '#666',
+                                    maxWidth: '100%',
+                                    wordBreak: 'break-word',
+                                    textAlign: 'center'
+                                }}>
+                                    {resultState.description}
+                                </div>
+                            }
+                            style={{ padding: 0 }}
+                        />
+                        {bookingSuccessful && (
+                            <>
+                                <div style={{ marginTop: 16 }}>
+                                    <SummaryStepMobile formValues={formValues} />
+                                </div>
+                                <div style={{ marginTop: 24 }}>
+                                    <Button
+                                        color='primary'
+                                        block
+                                        size='middle'
+                                        onClick={onReset}
+                                        style={{ fontSize: '14px' }}
+                                    >
+                                        OK
+                                    </Button>
+                                </div>
+                            </>
+                        )}
+                        {resultState.status === 'error' && (
+                            <div style={{ marginTop: 24 }}>
+                                <Grid columns={2} gap={16}>
+                                    <Grid.Item>
+                                        <Button
+                                            block
+                                            size='middle'
+                                            onClick={() => {
+                                                setResultState({
+                                                    show: false,
+                                                    status: 'waiting',
+                                                    title: '',
+                                                    description: ''
+                                                })
+                                            }}
+                                            style={{ fontSize: '16px' }}
+                                        >
+                                            Go Back
+                                        </Button>
+                                    </Grid.Item>
+                                    <Grid.Item>
+                                        <Button
+                                            color='primary'
+                                            block
+                                            size='middle'
+                                            onClick={onSubmit}
+                                            style={{ fontSize: '16px' }}
+                                        >
+                                            Try Again
+                                        </Button>
+                                    </Grid.Item>
+                                </Grid>
+                            </div>
+                        )}
                     </>
                 ) : (
                     <>
