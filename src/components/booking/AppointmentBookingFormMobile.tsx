@@ -333,7 +333,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
                             <Button
                                 color='primary'
                                 block
-                                size='large'
+                                size='middle'
                                 onClick={onReset}
                                 disabled={loading || submitting}
                                 loading={submitting}
@@ -352,7 +352,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
                             <Button
                                 color='primary'
                                 block
-                                size='large'
+                                size='middle'
                                 onClick={onReset}
                             >
                                 Finish
@@ -377,7 +377,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
                                     <Grid.Item>
                                         <Button
                                             block
-                                            size='large'
+                                            size='middle'
                                             onClick={() => prev()}
                                             disabled={loading || submitting}
                                         >
@@ -389,7 +389,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
                                     <Button
                                         color='primary'
                                         block
-                                        size='large'
+                                        size='middle'
                                         onClick={() => next()}
                                         disabled={loading || submitting}
                                     >

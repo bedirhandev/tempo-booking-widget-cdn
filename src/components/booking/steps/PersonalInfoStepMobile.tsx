@@ -239,11 +239,19 @@ const PersonalInfoStepMobile: React.FC<PersonalInfoStepMobileProps> = ({
         <div style={labelStyle}>
           <span>Additional Notes</span>
         </div>
-        <div style={textAreaWrapperStyle('additionalNotes')}>
+        <div
+          style={textAreaWrapperStyle('additionalNotes')}
+          className="custom-textarea-wrapper"
+        >
+          <style>{`
+            .custom-textarea-wrapper .adm-text-area-count {
+              font-size: 14px;
+            }
+          `}</style>
           <TextArea
             value={values.additionalNotes}
             onChange={(val) => handleChange('additionalNotes', val)}
-            placeholder='Any additional notes'
+            placeholder='Enter your additional notes'
             onFocus={() => setFocusedField('additionalNotes')}
             onBlur={() => setFocusedField(null)}
             rows={4}
