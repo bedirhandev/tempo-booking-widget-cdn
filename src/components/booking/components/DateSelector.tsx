@@ -1,8 +1,6 @@
 // DateSelector.tsx
 import React from 'react';
 import { Form, DatePicker } from 'antd';
-import { useIsMobile } from '../hooks/useIsMobile';
-import DateSelectorMobile from './DateSelectorMobile'; // Your existing mobile version
 import { Dayjs } from 'dayjs';
 
 interface DateSelectorProps {
@@ -18,12 +16,6 @@ interface DateSelectorProps {
 }
 
 const DateSelector: React.FC<DateSelectorProps> = (props) => {
-    const isMobile = useIsMobile();
-
-    if (isMobile) {
-        return <DateSelectorMobile {...props} />;
-    }
-
     // Desktop version using antd DatePicker
     const {
         name = 'date',

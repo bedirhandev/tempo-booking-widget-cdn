@@ -1,7 +1,7 @@
 // DateSelectorMobile.tsx
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { Form } from 'antd';
-import { DatePicker as MobileDatePicker } from 'antd-mobile';
+import { CalendarPicker } from 'antd-mobile';
 import { CalendarOutline, CloseCircleFill } from 'antd-mobile-icons';
 import dayjs, { Dayjs } from 'dayjs';
 
@@ -27,12 +27,13 @@ interface DateInputProps {
   style?: React.CSSProperties;
 }
 
-// DateSelector.tsx or DateSelectorMobile.tsx
 const DateInput = forwardRef<any, DateInputProps>(
   ({ value, onChange, placeholder, disabledDate, allowClear, format = 'MMM DD, YYYY', style }, ref) => {
     const [visible, setVisible] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
+    // Add local state to track the calendar selection
+    const [tempValue, setTempValue] = useState<Date | null>(null);
 
     useImperativeHandle(ref, () => ({
       focus: () => {
@@ -48,17 +49,21 @@ const DateInput = forwardRef<any, DateInputProps>(
     const handleClear = (e: React.MouseEvent) => {
       e.stopPropagation();
       onChange?.(undefined);
+      setTempValue(null);
     };
 
-    // Convert disabledDate function for antd-mobile DatePicker
-    const mobileFilter = disabledDate
-      ? {
-        day: (_val: number, extend: { date: Date }) => {
-          const dayjsDate = dayjs(extend.date);
-          return !disabledDate(dayjsDate); // Note: antd-mobile filter returns true for enabled dates
-        }
-      }
-      : undefined;
+    // Convert disabledDate function for antd-mobile CalendarPicker
+    const shouldDisableDate = (date: Date) => {
+      if (!disabledDate) return false;
+      return disabledDate(dayjs(date));
+    };
+
+    // When opening the calendar, set the temp value to the current value
+    const handleOpen = () => {
+      setTempValue(value ? value.toDate() : null);
+      setVisible(true);
+      setIsFocused(true);
+    };
 
     return (
       <>
@@ -78,10 +83,7 @@ const DateInput = forwardRef<any, DateInputProps>(
             boxShadow: isFocused ? '0 0 0 2px rgba(24, 144, 255, 0.2)' : 'none',
             ...style,
           }}
-          onClick={() => {
-            setVisible(true);
-            setIsFocused(true);
-          }}
+          onClick={handleOpen}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
@@ -112,25 +114,32 @@ const DateInput = forwardRef<any, DateInputProps>(
           </div>
         </div>
 
-        <MobileDatePicker
+        <CalendarPicker
           visible={visible}
+          selectionMode="single"
+          value={tempValue}
+          onChange={(val) => {
+            // Update temp value as user selects dates
+            setTempValue(val as Date | null);
+          }}
+          onConfirm={(date) => {
+            // For single selection mode, date will be a Date or null
+            onChange?.(date ? dayjs(date as Date) : undefined);
+            setTempValue(date as Date | null);
+            setVisible(false);
+            setIsFocused(false);
+          }}
           onClose={() => {
             setVisible(false);
             setIsFocused(false);
+            // Reset temp value when closing without confirming
+            setTempValue(value ? value.toDate() : null);
           }}
-          value={value ? value.toDate() : undefined}
-          onConfirm={(date) => {
-            onChange?.(date ? dayjs(date) : undefined);
-            setVisible(false);
-            setIsFocused(false);
-          }}
-          filter={mobileFilter}
+          shouldDisableDate={disabledDate ? shouldDisableDate : undefined}
           min={dayjs().toDate()} // Today as minimum date
           max={dayjs().add(1, 'year').toDate()} // One year from now as max
-          precision="day"
           title="Select Date"
           confirmText="Confirm"
-          cancelText="Cancel"
         />
       </>
     );
