@@ -10,7 +10,6 @@ import axios from 'axios'
 import type { Service, Company, TeamMember } from '@/components/booking/types'
 
 import ServiceStepSkeletonMobile from '@/components/booking/steps/ServiceStepSkeletonMobile'
-import SummaryStepSkeletonMobile from '@/components/booking/steps/SummaryStepSkeletonMobile'
 
 import { createAppointment, getAppointments, getServices, getTeamMembers } from '@/components/booking/api'
 import { useApiNotifications } from '@/components/booking/api-notifications'
