@@ -11,11 +11,6 @@ const ServiceStepSkeletonMobile: React.FC = () => {
     color: '#000',
   };
 
-  const skeletonInputStyle = {
-    height: 32,
-    borderRadius: 4,
-  };
-
   return (
     <div>
       {/* Service Field */}
@@ -24,25 +19,25 @@ const ServiceStepSkeletonMobile: React.FC = () => {
           <span style={{ color: '#ff4d4f', marginRight: 4 }}>*</span>
           <span>Service</span>
         </div>
-        <Skeleton animated style={skeletonInputStyle} />
+        <Skeleton animated style={{ height: 32, width: '100%' }} />
       </div>
 
-      {/* Date and Time Fields - Side by side */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        <div style={{ flex: 1 }}>
-          <div style={labelStyle}>
-            <span style={{ color: '#ff4d4f', marginRight: 4 }}>*</span>
-            <span>Date</span>
-          </div>
-          <Skeleton animated style={skeletonInputStyle} />
+      {/* Date Field */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={labelStyle}>
+          <span style={{ color: '#ff4d4f', marginRight: 4 }}>*</span>
+          <span>Date</span>
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={labelStyle}>
-            <span style={{ color: '#ff4d4f', marginRight: 4 }}>*</span>
-            <span>Time</span>
-          </div>
-          <Skeleton animated style={skeletonInputStyle} />
+        <Skeleton animated style={{ height: 32, width: '100%' }} />
+      </div>
+
+      {/* Time Field */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={labelStyle}>
+          <span style={{ color: '#ff4d4f', marginRight: 4 }}>*</span>
+          <span>Time</span>
         </div>
+        <Skeleton animated style={{ height: 32, width: '100%' }} />
       </div>
 
       {/* Employee Field */}
@@ -51,7 +46,7 @@ const ServiceStepSkeletonMobile: React.FC = () => {
           <span style={{ color: '#ff4d4f', marginRight: 4 }}>*</span>
           <span>Employee</span>
         </div>
-        <Skeleton animated style={skeletonInputStyle} />
+        <Skeleton animated style={{ height: 32, width: '100%' }} />
       </div>
     </div>
   );
