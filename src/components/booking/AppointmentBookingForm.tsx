@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Steps, Button, message, Card, Row, Col } from 'antd'
+import { Steps, Button, Card, Row, Col, Result } from 'antd'
 import ServiceStep from '@/components/booking/steps/ServiceStep'
 import PersonalInfoStep from '@/components/booking/steps/PersonalInfoStep'
 import SummaryStep from '@/components/booking/steps/SummaryStep'
@@ -10,10 +10,8 @@ import axios from 'axios'
 import type { Service, Company, TeamMember } from '@/components/booking/types'
 
 import ServiceStepSkeleton from '@/components/booking/steps/ServiceStepSkeleton'
-import SummaryStepSkeleton from '@/components/booking/steps/SummaryStepSkeleton'
 
 import { createAppointment, getAppointments, getServices, getTeamMembers } from '@/components/booking/api'
-import { useApiNotifications } from '@/components/booking/api-notifications'
 
 const { Step } = Steps
 
@@ -75,6 +73,13 @@ interface AppointmentBookingFormProps {
   onError?: (error: any) => void;
 }
 
+interface ResultState {
+  show: boolean;
+  status: 'success' | 'error' | 'info';
+  title: string;
+  description?: string;
+}
+
 const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
   tenantId = 'default',
   apiUrl,
@@ -91,21 +96,13 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
   const [rawServiceData, setRawServiceData] = useState<Service[]>()
   const [company, setCompany] = useState<Company>()
   const [bookingSuccessful, setBookingSuccessful] = useState(false)
-  const [submitting, setSubmitting] = useState(false) // Add submitting state
-
-  const [wpadminbarHeight, setWpadminbarHeight] = useState(50) // Default to 50 if not found
-
-  useEffect(() => {
-    const wpadminbar = document.getElementById('wpadminbar')
-    if (wpadminbar) {
-      setWpadminbarHeight(wpadminbar.clientHeight)
-    }
-  }, [])
-
-  const [messageApi, contextHolder] = message.useMessage({ top: wpadminbarHeight })
-
-
-  const { handleApiResponse, notifications } = useApiNotifications();
+  const [submitting, setSubmitting] = useState(false)
+  const [resultState, setResultState] = useState<ResultState>({
+    show: false,
+    status: 'info',
+    title: '',
+    description: ''
+  })
 
   const forms = {
     serviceForm: React.createRef<any>(),
@@ -145,7 +142,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
   ]
 
   const next = async () => {
-    if (submitting) return // Prevent actions during submission
+    if (submitting) return
 
     let formRef
     if (current === 0) {
@@ -157,7 +154,6 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
       try {
         await formRef.validateFields()
         if (current === steps.length - 1) {
-          // Trigger submission after Personal Information step
           await onSubmit()
         } else {
           setCurrent(current + 1)
@@ -177,24 +173,16 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
   const onSubmit = async () => {
     try {
       setSubmitting(true)
-      messageApi.loading({ content: 'Processing your appointment...', key: 'booking' })
+
+      // Show loading result
+      setResultState({
+        show: true,
+        status: 'info',
+        title: 'Processing your appointment...',
+        description: 'Please wait while we confirm your booking'
+      })
 
       const { Notes } = customerValues
-
-      /*await apiClient.post(
-        '/book-appointment',
-        {
-          customer: customerData,
-          appointment: {
-            service_id: Number(bookingValues.serviceId),
-            employee_id: Number(bookingValues.employeeId),
-            note: customerValues.Notes,
-            notification_enabled: bookingValues.notificationEnabled,
-            date: bookingValues.date?.format('YYYY-MM-DD'),
-            time: bookingValues.time
-          },
-        }
-      )*/
 
       const booking: any = {
         userId: bookingValues.employeeId || "",
@@ -215,21 +203,18 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
         time: bookingValues.time || ""
       };
 
-      const loadingToast = notifications.loading('Creating booking...');
-      const response = await createAppointment(booking, tenantId, apiUrl);
-      notifications.dismiss(loadingToast);
+      await createAppointment(booking, tenantId, apiUrl);
 
-      handleApiResponse(response, 'Booking created successfully');
-
-      messageApi.success({
-        content: 'Appointment booked successfully!',
-        key: 'booking',
-        duration: 2
+      // Show success result
+      setResultState({
+        show: true,
+        status: 'success',
+        title: 'Appointment Booked Successfully!',
+        description: 'Your appointment has been confirmed. You will receive a confirmation email shortly.'
       })
 
       setBookingSuccessful(true)
 
-      // Call the onBookingComplete callback if provided
       if (onBookingComplete) {
         onBookingComplete({
           booking: booking,
@@ -240,56 +225,42 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
       }
 
     } catch (error: unknown) {
-      // If it's an Axios error, check specifics
+      let errorTitle = 'Booking Failed';
+      let errorDescription = 'An unexpected error occurred.';
+
       if (axios.isAxiosError(error)) {
         if (error.response) {
           const { status, data } = error.response;
 
           if (status === 422) {
-            // Validation error
-            messageApi.error({
-              content: 'Validation failed: please check the form fields.',
-              key: 'booking',
-              duration: 2,
-            });
+            errorTitle = 'Validation Error';
+            errorDescription = 'Please check the form fields and try again.';
           } else if (status === 500) {
-            // Server error
-            messageApi.error({
-              content: data?.message || 'A server error occurred.',
-              key: 'booking',
-              duration: 2,
-            });
+            errorTitle = 'Server Error';
+            errorDescription = data?.message || 'A server error occurred. Please try again later.';
           } else {
-            // Other errors (400, 403, 404, etc.)
-            messageApi.error({
-              content: data?.message || 'An error occurred during the booking.',
-              key: 'booking',
-              duration: 2,
-            });
+            errorTitle = 'Booking Error';
+            errorDescription = data?.message || 'An error occurred during the booking.';
           }
         } else {
-          // Possibly a network error
-          messageApi.error({
-            content: 'Network error or server did not respond.',
-            key: 'booking',
-            duration: 2,
-          });
+          errorTitle = 'Network Error';
+          errorDescription = 'Unable to connect to the server. Please check your internet connection.';
         }
-      } else {
-        // Some non-Axios error
-        messageApi.error({
-          content: 'An unexpected error occurred.',
-          key: 'booking',
-          duration: 2,
-        });
       }
 
-      // Call the onError callback if provided
+      // Show error result
+      setResultState({
+        show: true,
+        status: 'error',
+        title: errorTitle,
+        description: errorDescription
+      })
+
       if (onError) {
         onError(error)
       }
     } finally {
-      setSubmitting(false) // End submission
+      setSubmitting(false)
     }
   }
 
@@ -303,13 +274,17 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
     setBookingSuccessful(false)
     setCurrent(0)
     setLoading(true)
+    setResultState({
+      show: false,
+      status: 'info',
+      title: '',
+      description: ''
+    })
     await fetchData()
     setLoading(false)
   }
 
   const fetchData = async () => {
-    //setLoading(true)
-
     try {
       const [appointmentsResponse, servicesResponse, employeesResponse] = await Promise.all([
         getAppointments(tenantId, apiUrl),
@@ -319,12 +294,10 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
       setRawBookingData(appointmentsResponse)
       setRawServiceData(servicesResponse.data)
       setRawEmployeeData(employeesResponse.data.data)
-      setCompany(undefined) // Company data will be handled separately
+      setCompany(undefined)
     } catch (error) {
       console.error('Something went wrong:', error)
-    } /*finally {
-      setLoading(false)
-    }*/
+    }
   }
 
   useEffect(() => {
@@ -333,47 +306,78 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
 
   return (
     <>
-      {contextHolder}
       <Card>
-        {submitting ? (
+        {resultState.show ? (
           <>
-            <div style={{ marginTop: 16 }}>
-              <SummaryStepSkeleton
-                loadingText='Processing booking details...'
-                subText='This usually takes a few seconds'
-              />
-            </div>
-            <div className='steps-action' style={{ marginTop: 24 }}>
-              <Row>
-                <Col xs={24}>
+            <Result
+              status={resultState.status}
+              title={resultState.title}
+              subTitle={
+                <div style={{
+                  fontSize: '14px',
+                  lineHeight: '1.5',
+                  color: '#666',
+                  maxWidth: '100%',
+                  wordBreak: 'break-word',
+                  textAlign: 'center'
+                }}>
+                  {resultState.description}
+                </div>
+              }
+              style={{ padding: 0 }}
+            />
+            {bookingSuccessful && (
+              <>
+                <div style={{ marginTop: 16 }}>
+                  <SummaryStep formValues={formValues} />
+                </div>
+                <div style={{ marginTop: 24 }}>
                   <Button
                     type='primary'
                     block
+                    size='middle'
                     onClick={onReset}
-                    disabled={loading || submitting}
-                    loading={submitting} // Shows a spinner in the button
+                    style={{ fontSize: '14px' }}
                   >
-                    {submitting ? 'Processing...' : 'Finish'}
+                    OK
                   </Button>
-                </Col>
-              </Row>
-            </div>
-          </>
-        ) : bookingSuccessful ? (
-          <>
-            <p style={{ marginTop: 0 }}>Your appointment has been booked successfully!</p>
-            <div style={{ marginTop: 16 }}>
-              <SummaryStep formValues={formValues} />
-            </div>
-            <div className='steps-action' style={{ marginTop: 24 }}>
-              <Row>
-                <Col xs={24}>
-                  <Button type='primary' block onClick={onReset}>
-                    Finish
-                  </Button>
-                </Col>
-              </Row>
-            </div>
+                </div>
+              </>
+            )}
+            {resultState.status === 'error' && (
+              <div style={{ marginTop: 24 }}>
+                <Row gutter={16}>
+                  <Col xs={24} sm={12}>
+                    <Button
+                      block
+                      size='middle'
+                      onClick={() => {
+                        setResultState({
+                          show: false,
+                          status: 'info',
+                          title: '',
+                          description: ''
+                        })
+                      }}
+                      style={{ fontSize: '16px' }}
+                    >
+                      Go Back
+                    </Button>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <Button
+                      type='primary'
+                      block
+                      size='middle'
+                      onClick={onSubmit}
+                      style={{ fontSize: '16px' }}
+                    >
+                      Try Again
+                    </Button>
+                  </Col>
+                </Row>
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -382,13 +386,18 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
                 <Step key={item.title} title={item.title} />
               ))}
             </Steps>
-            <div className='steps-content'>{steps[current].content}</div>
-            <div className='steps-action'>
+
+            <div className='steps-content' style={{ minHeight: '300px' }}>
+              {steps[current].content}
+            </div>
+
+            <div className='steps-action' style={{ marginTop: 16 }}>
               <Row gutter={[16, 16]}>
                 {current > 0 && (
                   <Col xs={24} sm={12}>
                     <Button
                       block
+                      size='middle'
                       onClick={() => prev()}
                       disabled={loading || submitting}
                     >
@@ -400,6 +409,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
                   <Button
                     type='primary'
                     block
+                    size='middle'
                     onClick={() => next()}
                     disabled={loading || submitting}
                   >

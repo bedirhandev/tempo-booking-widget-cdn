@@ -12,7 +12,6 @@ import type { Service, Company, TeamMember } from '@/components/booking/types'
 import ServiceStepSkeletonMobile from '@/components/booking/steps/ServiceStepSkeletonMobile'
 
 import { createAppointment, getAppointments, getServices, getTeamMembers } from '@/components/booking/api'
-import { useApiNotifications } from '@/components/booking/api-notifications'
 
 interface Booking {
     id: string
@@ -102,8 +101,6 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
         title: '',
         description: ''
     })
-
-    const { handleApiResponse } = useApiNotifications();
 
     const forms = {
         serviceForm: React.createRef<any>(),
@@ -204,9 +201,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
                 time: bookingValues.time || ""
             };
 
-            const response = await createAppointment(booking, tenantId, apiUrl);
-
-            handleApiResponse(response, 'Booking created successfully');
+            await createAppointment(booking, tenantId, apiUrl);
 
             // Show success result
             setResultState({
