@@ -385,7 +385,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
                             ))}
                         </Steps>
 
-                        <div style={{ minHeight: '300px' }}>
+                        <div>
                             {steps[current].content}
                         </div>
 

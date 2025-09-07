@@ -387,7 +387,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
               ))}
             </Steps>
 
-            <div className='steps-content' style={{ minHeight: '300px' }}>
+            <div className='steps-content'>
               {steps[current].content}
             </div>
 
