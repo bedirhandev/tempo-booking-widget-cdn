@@ -3,7 +3,7 @@
 
 // CRITICAL: Import antd-mobile global styles first
 // This ensures all antd-mobile components render correctly
-import 'antd-mobile/es/global'
+//import 'antd-mobile/es/global'
 
 // Import and initialize antd-mobile configuration BEFORE anything else
 import { initializeAntdMobile } from './antd-mobile-init'

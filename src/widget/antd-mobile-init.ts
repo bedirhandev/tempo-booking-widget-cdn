@@ -13,7 +13,7 @@ import { defaultConfigRef } from 'antd-mobile/es/components/config-provider/conf
 import enUS from 'antd-mobile/es/locales/en-US';
 
 // Import antd-mobile global styles - this is why it works in dev mode
-import 'antd-mobile/es/global';
+//import 'antd-mobile/es/global';
 
 /**
  * Initialize antd-mobile with proper configuration for widget usage

@@ -7,12 +7,13 @@ import AppointmentBookingForm from '@/components/booking/AppointmentBookingForm'
 import AppointmentBookingFormMobile from '@/components/booking/AppointmentBookingFormMobile'
 import { useIsMobile } from '@/components/booking/hooks/useIsMobile'
 import type { WidgetConfig } from '@/types/widget'
-import '@/styles/widget.css'
 import enUS from 'antd/locale/en_US'
 import enUSMobile from 'antd-mobile/es/locales/en-US'
 
 // Import antd-mobile global styles - this is why it works in dev mode
-import 'antd-mobile/es/global';
+//import 'antd-mobile/es/global';
+
+import '@/styles/widget.css'
 
 interface WidgetContainerProps {
   config: WidgetConfig
