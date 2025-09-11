@@ -196,11 +196,22 @@ const transformEmployeeData = (data: any[]): Employee[] => {
 const mergeTimeRanges = (ranges: TimeRange[]): TimeRange[] => {
   if (!ranges.length) return []
 
-  const sortedRanges = ranges
-    .map((range) => ({
-      start: dayjs(range.start, 'HH:mm'),
-      end: dayjs(range.end, 'HH:mm')
-    }))
+  const processedRanges: { start: dayjs.Dayjs; end: dayjs.Dayjs }[] = [];
+
+
+  ranges.forEach((range) => {
+    let start = dayjs(range.start, 'HH:mm');
+    let end = dayjs(range.end, 'HH:mm');
+
+    if (end.isBefore(start)) {
+      processedRanges.push({ start, end: dayjs('24:00', 'HH:mm') }); // end of day
+      processedRanges.push({ start: dayjs('00:00', 'HH:mm'), end }); // beginning of day
+    } else {
+      processedRanges.push({ start, end });
+    }
+  });
+
+  const sortedRanges = processedRanges
     .sort((a, b) => (a.start.isBefore(b.start) ? -1 : 1))
 
   const mergedRanges = [sortedRanges[0]]
@@ -208,7 +219,7 @@ const mergeTimeRanges = (ranges: TimeRange[]): TimeRange[] => {
     const lastRange = mergedRanges[mergedRanges.length - 1]
     const currentRange = sortedRanges[i]
     if (currentRange.start.isSameOrBefore(lastRange.end)) {
-      lastRange.end = dayjs.max(dayjs(), lastRange.end, currentRange.end)
+      lastRange.end = dayjs.max(lastRange.end, currentRange.end)
     } else {
       mergedRanges.push(currentRange)
     }
@@ -343,9 +354,32 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
     const timesSet = new Set<string>()
     Object.values(timeRangesByEmployee).forEach((timeRanges) => {
       timeRanges.forEach((range) => {
-        let startTime = dayjs(range.start, 'HH:mm')
-        const endTime = dayjs(range.end, 'HH:mm')
-        if (USE_SERVICE_DURATION_STEPS) {
+        let startTime = dayjs(range.start, ['HH:mm', 'h:mm A'])
+        let endTime = dayjs(range.end, ['HH:mm', 'h:mm A'])
+
+        if (endTime.isBefore(startTime)) {
+          // Handle overnight shifts by adding 1 day to endTime
+          endTime = endTime.add(1, 'day')
+        }
+
+        while (startTime.isBefore(endTime)) {
+          const slotEnd = startTime.add(serviceDuration || 0, 'minute');
+
+          // Skip if slotEnd goes beyond endTime
+          if (slotEnd.isAfter(endTime)) {
+            break;
+          }
+
+          const timeStr = startTime.format('HH:mm');
+          timesSet.add(timeStr);
+
+          startTime = startTime.add(
+            USE_SERVICE_DURATION_STEPS ? serviceDuration : TIME_INCREMENT,
+            'minute'
+          )
+        }
+
+        /*if (USE_SERVICE_DURATION_STEPS) {
           // Use service duration steps
           while (startTime.isSameOrBefore(endTime.subtract(serviceDuration, 'minute'), 'minute')) {
             const timeStr = startTime.format('HH:mm')
@@ -359,7 +393,7 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
             timesSet.add(timeStr)
             startTime = startTime.add(TIME_INCREMENT, 'minute')
           }
-        }
+        }*/
       })
     })
 
@@ -389,7 +423,13 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
         let worksAtTime = false
         timeRanges.forEach((range) => {
           const start = dayjs(range.start, 'HH:mm')
-          const end = dayjs(range.end, 'HH:mm')
+          let end = dayjs(range.end, 'HH:mm')
+
+          if (end.isBefore(start)) {
+            // Handle overnight shifts by adding 1 day to end
+            end = end.add(1, 'day')
+          }
+
           if (selectedTimeMoment.isSameOrAfter(start) && serviceEndTime.isSameOrBefore(end)) {
             worksAtTime = true
           }
@@ -471,8 +511,14 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
           if (dayTimeRanges && dayTimeRanges.length > 0) {
             dayTimeRanges = mergeTimeRanges(dayTimeRanges)
             dayTimeRanges.forEach((range) => {
-              const start = dayjs(range.start, 'HH:mm')
-              const end = dayjs(range.end, 'HH:mm')
+              let start = dayjs(range.start, ['HH:mm', 'h:mm A'])
+              let end = dayjs(range.end, ['HH:mm', 'h:mm A'])
+
+              if (end.isBefore(start)) {
+                // Handle overnight shifts by adding 1 day to end
+                end = end.add(1, 'day')
+              }
+
               if (selectedTimeMoment.isSameOrAfter(start) && serviceEndTime.isSameOrBefore(end)) {
                 isAvailable = true
               }

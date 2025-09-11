@@ -12,6 +12,7 @@ import type { Service, Company, TeamMember } from '@/components/booking/types'
 import ServiceStepSkeleton from '@/components/booking/steps/ServiceStepSkeleton'
 
 import { createAppointment, getAppointments, getServices, getTeamMembers } from '@/components/booking/api'
+import { convertLocalTimeToUtc } from './utils/datetime'
 
 const { Step } = Steps
 
@@ -200,7 +201,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
         note: Notes,
         notificationEnabled: bookingValues.notificationEnabled,
         date: bookingValues.date!.toDate(),
-        time: bookingValues.time || ""
+        time: convertLocalTimeToUtc(bookingValues.time!) || ""
       };
 
       await createAppointment(booking, tenantId, apiUrl);

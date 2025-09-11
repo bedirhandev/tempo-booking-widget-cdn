@@ -11,7 +11,7 @@ import enUSMobile from 'antd-mobile/es/locales/en-US';
 
 function App() {
   const isMobile = useIsMobile();
-  const tenantId = "10e7c063-e054-4e30-ae97-c62d489dea76"; //"dd8e3fbf-e864-4adb-871f-9b2c84328651";
+  const tenantId = "9b882a74-ca74-4c2e-a6de-5bd183773792"; //"dd8e3fbf-e864-4adb-871f-9b2c84328651";
 
   // Common UI wrapper
   const AppContent = () => (
