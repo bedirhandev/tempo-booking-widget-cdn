@@ -9,7 +9,7 @@ import type { Booking, Customer, FormValues, Service, TeamMember } from '@/compo
 
 import ServicesStepSkeleton from '@/components/booking/steps/ServiceStepSkeleton'
 
-import { createAppointment, getAvailableTimeSlots } from '@/components/booking/api'
+import { createAppointment } from '@/components/booking/api'
 import { convertLocalTimeToUtc } from './utils/datetime'
 import { getServices, getTeamMembers } from '@/components/booking/api'
 
@@ -83,7 +83,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
   })
 
   const forms = {
-    servicesForm: React.createRef<any>(),
+    serviceForm: React.createRef<any>(),
     personalInfoForm: React.createRef<any>()
   }
 
@@ -93,7 +93,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
       content:
         servicesData && employeesData ? (
           <ServiceStep
-            formRef={forms.servicesForm}
+            formRef={forms.serviceForm}
             setFormValues={setFormValues}
             bookingValues={bookingValues}
             setBookingValues={setBookingValues}
@@ -123,7 +123,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
 
     let formRef
     if (current === 0) {
-      formRef = forms.servicesForm.current
+      formRef = forms.serviceForm.current
     } else if (current === 1) {
       formRef = forms.personalInfoForm.current
     }

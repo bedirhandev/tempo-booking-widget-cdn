@@ -3,29 +3,15 @@ import { Steps, Button, Card, Grid, Result } from 'antd-mobile'
 import ServiceStepMobile from '@/components/booking/steps/ServiceStepMobile'
 import PersonalInfoStepMobile from '@/components/booking/steps/PersonalInfoStepMobile'
 import SummaryStepMobile from '@/components/booking/steps/SummaryStepMobile'
-import type { FormValues } from '@/components/booking/types'
-import { Dayjs } from 'dayjs'
 import axios from 'axios'
-
-import type { Service, Company, TeamMember } from '@/components/booking/types'
 
 import ServiceStepSkeletonMobile from '@/components/booking/steps/ServiceStepSkeletonMobile'
 
-import { createAppointment, getAppointments} from '@/components/booking/api'
+import { createAppointment } from '@/components/booking/api'
 
+import type { Booking, Customer, FormValues, Service, TeamMember } from '@/components/booking/types/index'
 
-import { getAvailableTimeSlots, getServices, getTeamMembers } from './api-test'
-
-interface Booking {
-    id: string
-    serviceId: string | undefined
-    employeeId: string | undefined
-    customerId: string | undefined
-    note: string | undefined
-    notificationEnabled: boolean
-    date: Dayjs | null
-    time: string | undefined
-}
+import { getServices, getTeamMembers } from '@/components/booking/api'
 
 const initialBookingState: Booking = {
     id: '',
@@ -36,15 +22,6 @@ const initialBookingState: Booking = {
     notificationEnabled: true,
     date: null,
     time: undefined
-}
-
-interface Customer {
-    id: string
-    FullName: string
-    Email: string
-    Phone?: string
-    Notes?: string
-    isRegistered?: boolean
 }
 
 const initialCustomerState: Customer = {
@@ -92,10 +69,8 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
     const [bookingValues, setBookingValues] = useState<Booking>(initialBookingState)
     const [customerValues, setCustomerValues] = useState<Customer>(initialCustomerState)
     const [loading, setLoading] = useState(true)
-    const [rawBookingData, setRawBookingData] = useState<Booking[]>()
-    const [rawEmployeeData, setRawEmployeeData] = useState<TeamMember[]>()
-    const [rawServiceData, setRawServiceData] = useState<Service[]>()
-    const [company, setCompany] = useState<Company>()
+    const [employeesData, setEmployeesData] = useState<TeamMember[]>()
+    const [servicesData, setServicesData] = useState<Service[]>()
     const [bookingSuccessful, setBookingSuccessful] = useState(false)
     const [submitting, setSubmitting] = useState(false)
     const [resultState, setResultState] = useState<ResultState>({
@@ -114,16 +89,15 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
         {
             title: 'Select Service',
             content:
-                rawBookingData && rawServiceData && rawEmployeeData ? (
+                servicesData && employeesData ? (
                     <ServiceStepMobile
                         formRef={forms.serviceForm}
                         setFormValues={setFormValues}
                         bookingValues={bookingValues}
                         setBookingValues={setBookingValues}
-                        company={company || { id: undefined, image: '', name: '', address: '', website: '', phone: '', email: '', time_entries: [], days_off: [] }}
-                        rawServiceData={rawServiceData}
-                        rawEmployeeData={rawEmployeeData}
-                        rawBookingData={rawBookingData}
+                        employeesData={employeesData}
+                        servicesData={servicesData}
+                        tenantId={tenantId}
                     />
                 ) : (
                     <ServiceStepSkeletonMobile />
@@ -131,7 +105,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
         },
         {
             title: 'Personal Information',
-            content: rawBookingData && (
+            content: (
                 <PersonalInfoStepMobile
                     formRef={forms.personalInfoForm}
                     setFormValues={setFormValues}
@@ -266,9 +240,8 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
     }
 
     const onReset = async () => {
-        setRawBookingData(undefined)
-        setRawServiceData(undefined)
-        setRawEmployeeData(undefined)
+        setServicesData(undefined)
+        setEmployeesData(undefined)
         setBookingValues(initialBookingState)
         setCustomerValues(initialCustomerState)
         setFormValues(initialFormValues)
@@ -287,15 +260,12 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
 
     const fetchData = async () => {
         try {
-            const [appointmentsResponse, servicesResponse, employeesResponse] = await Promise.all([
-                getAppointments(tenantId, apiUrl),
+            const [servicesResponse, employeesResponse] = await Promise.all([
                 getServices(tenantId, apiUrl),
                 getTeamMembers(tenantId, apiUrl)
             ])
-            setRawBookingData(appointmentsResponse)
-            setRawServiceData(servicesResponse.data)
-            setRawEmployeeData(employeesResponse.data.data)
-            setCompany(undefined)
+            setServicesData(servicesResponse.data.data)
+            setEmployeesData(employeesResponse.data.data)
         } catch (error) {
             console.error('Something went wrong:', error)
         }

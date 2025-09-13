@@ -216,7 +216,7 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
               isLoadingTimes
                 ? "Loading available times..."
                 : !selectedServiceId || !selectedDate
-                  ? "Select service and date first"
+                  ? "Select a time"
                   : "Select a time"
             }
             availableTimes={availableTimes}
