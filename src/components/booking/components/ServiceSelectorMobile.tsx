@@ -6,9 +6,8 @@ import { DownOutline, CloseCircleFill } from 'antd-mobile-icons';
 import type { CheckListValue } from 'antd-mobile/es/components/check-list';
 
 interface Service {
-  id: string;
+  id: number;
   name: string;
-  duration: number;
   price: number;
 }
 
@@ -39,7 +38,7 @@ const ServiceInput = forwardRef<any, ServiceInputProps>(
     const [isFocused, setIsFocused] = useState(false);
     const [tempValue, setTempValue] = useState<CheckListValue[]>([]);
 
-    const selectedService = value ? services.find((s) => s.id === value) : null;
+    const selectedService = value ? services.find((s) => s.id === Number(value)) : null;
 
     useImperativeHandle(ref, () => ({
       focus: () => {

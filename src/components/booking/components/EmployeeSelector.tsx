@@ -4,14 +4,10 @@ import { Form, Select } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import { useIsMobile } from '../hooks/useIsMobile';
 import EmployeeSelectorMobile from './EmployeeSelectorMobile'; // Your existing mobile version
-
-interface Employee {
-    id: string;
-    name: string;
-}
+import type { TeamMember } from '@/components/booking/types/index'
 
 interface AvailableEmployee {
-    employee: Employee;
+    employee: TeamMember;
     disabled: boolean;
 }
 

@@ -1,0 +1,65 @@
+// utils/timezoneUtils.ts
+import dayjs, { Dayjs } from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
+const DEFAULT_DATE_FORMAT = 'YYYY-MM-DD'
+const DEFAULT_TIME_FORMAT = 'HH:mm'
+const DEFAULT_DATETIME_FORMAT = 'YYYY-MM-DD HH:mm'
+
+/**
+ * Convert UTC datetime string to local timezone
+ */
+export function convertUtcToLocal(
+  utcDateTime: string,
+  format: string = DEFAULT_DATETIME_FORMAT
+): string {
+  return dayjs.utc(utcDateTime).local().format(format)
+}
+
+/**
+ * Convert UTC time string to local time
+ */
+export function convertUtcTimeToLocal(
+  timeString: string,
+  baseDate?: Dayjs,
+  format: string = DEFAULT_TIME_FORMAT
+): string {
+  const date = (baseDate || dayjs()).format(DEFAULT_DATE_FORMAT)
+  return dayjs.utc(`${date} ${timeString}`).local().format(format)
+}
+
+/**
+ * Convert local time string to UTC time
+ */
+export function convertLocalTimeToUtc(
+  timeString: string,
+  baseDate?: Dayjs,
+  format: string = DEFAULT_TIME_FORMAT
+): string {
+  const date = (baseDate || dayjs()).format(DEFAULT_DATE_FORMAT)
+  return dayjs(`${date} ${timeString}`).utc().format(format)
+}
+
+/**
+ * Create a datetime from date and time in local timezone
+ */
+export function createLocalDateTime(date: Dayjs, timeString: string): Dayjs {
+  const dateStr = date.format(DEFAULT_DATE_FORMAT)
+  return dayjs(`${dateStr} ${timeString}`)
+}
+
+/**
+ * Check if two time ranges overlap
+ */
+export function timeRangesOverlap(
+  start1: Dayjs,
+  end1: Dayjs,
+  start2: Dayjs,
+  end2: Dayjs
+): boolean {
+  return start1.isBefore(end2) && start2.isBefore(end1)
+}

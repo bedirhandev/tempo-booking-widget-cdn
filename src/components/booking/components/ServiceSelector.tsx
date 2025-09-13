@@ -5,10 +5,9 @@ import { useIsMobile } from '../hooks/useIsMobile';
 import ServiceSelectorMobile from './ServiceSelectorMobile';
 
 interface Service {
-  id: string;
+  id: number;
   name: string;
   price: number;
-  duration: number;
 }
 
 interface ServiceSelectorProps {

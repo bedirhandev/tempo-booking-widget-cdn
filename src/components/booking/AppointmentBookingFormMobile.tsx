@@ -11,7 +11,10 @@ import type { Service, Company, TeamMember } from '@/components/booking/types'
 
 import ServiceStepSkeletonMobile from '@/components/booking/steps/ServiceStepSkeletonMobile'
 
-import { createAppointment, getAppointments, getServices, getTeamMembers } from '@/components/booking/api'
+import { createAppointment, getAppointments} from '@/components/booking/api'
+
+
+import { getAvailableTimeSlots, getServices, getTeamMembers } from './api-test'
 
 interface Booking {
     id: string

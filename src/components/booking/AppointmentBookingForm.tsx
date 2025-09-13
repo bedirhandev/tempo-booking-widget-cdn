@@ -3,29 +3,17 @@ import { Steps, Button, Card, Row, Col, Result } from 'antd'
 import ServiceStep from '@/components/booking/steps/ServiceStep'
 import PersonalInfoStep from '@/components/booking/steps/PersonalInfoStep'
 import SummaryStep from '@/components/booking/steps/SummaryStep'
-import type { FormValues } from '@/components/booking/types'
-import { Dayjs } from 'dayjs'
 import axios from 'axios'
 
-import type { Service, Company, TeamMember } from '@/components/booking/types'
+import type { Booking, Customer, FormValues, Service, TeamMember } from '@/components/booking/types/index'
 
-import ServiceStepSkeleton from '@/components/booking/steps/ServiceStepSkeleton'
+import ServicesStepSkeleton from '@/components/booking/steps/ServiceStepSkeleton'
 
-import { createAppointment, getAppointments, getServices, getTeamMembers } from '@/components/booking/api'
+import { createAppointment, getAvailableTimeSlots } from '@/components/booking/api'
 import { convertLocalTimeToUtc } from './utils/datetime'
+import { getServices, getTeamMembers } from '@/components/booking/api'
 
 const { Step } = Steps
-
-interface Booking {
-  id: string
-  serviceId: string | undefined
-  employeeId: string | undefined
-  customerId: string | undefined
-  note: string | undefined
-  notificationEnabled: boolean
-  date: Dayjs | null
-  time: string | undefined
-}
 
 const initialBookingState: Booking = {
   id: '',
@@ -38,15 +26,6 @@ const initialBookingState: Booking = {
   time: undefined
 }
 
-interface Customer {
-  id: string
-  FullName: string
-  Email: string
-  Phone?: string
-  Notes?: string
-  isRegistered?: boolean
-}
-
 const initialCustomerState: Customer = {
   id: '',
   FullName: '',
@@ -57,8 +36,8 @@ const initialCustomerState: Customer = {
 }
 
 const initialFormValues = {
-  service: undefined,
-  employee: undefined,
+  services: undefined,
+  employees: undefined,
   date: undefined,
   time: undefined,
   fullName: '',
@@ -92,10 +71,8 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
   const [bookingValues, setBookingValues] = useState<Booking>(initialBookingState)
   const [customerValues, setCustomerValues] = useState<Customer>(initialCustomerState)
   const [loading, setLoading] = useState(true)
-  const [rawBookingData, setRawBookingData] = useState<Booking[]>()
-  const [rawEmployeeData, setRawEmployeeData] = useState<TeamMember[]>()
-  const [rawServiceData, setRawServiceData] = useState<Service[]>()
-  const [company, setCompany] = useState<Company>()
+  const [employeesData, setEmployeesData] = useState<TeamMember[]>()
+  const [servicesData, setServicesData] = useState<Service[]>()
   const [bookingSuccessful, setBookingSuccessful] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [resultState, setResultState] = useState<ResultState>({
@@ -106,32 +83,31 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
   })
 
   const forms = {
-    serviceForm: React.createRef<any>(),
+    servicesForm: React.createRef<any>(),
     personalInfoForm: React.createRef<any>()
   }
 
   const steps = [
     {
-      title: 'Select Service',
+      title: 'Select Services',
       content:
-        rawBookingData && rawServiceData && rawEmployeeData ? (
+        servicesData && employeesData ? (
           <ServiceStep
-            formRef={forms.serviceForm}
+            formRef={forms.servicesForm}
             setFormValues={setFormValues}
             bookingValues={bookingValues}
             setBookingValues={setBookingValues}
-            company={company || { id: undefined, image: '', name: '', address: '', website: '', phone: '', email: '', time_entries: [], days_off: [] }}
-            rawServiceData={rawServiceData}
-            rawEmployeeData={rawEmployeeData}
-            rawBookingData={rawBookingData}
+            employeesData={employeesData}
+            servicesData={servicesData}
+            tenantId={tenantId}
           />
         ) : (
-          <ServiceStepSkeleton />
+          <ServicesStepSkeleton />
         )
     },
     {
       title: 'Personal Information',
-      content: rawBookingData && (
+      content: (
         <PersonalInfoStep
           formRef={forms.personalInfoForm}
           setFormValues={setFormValues}
@@ -147,7 +123,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
 
     let formRef
     if (current === 0) {
-      formRef = forms.serviceForm.current
+      formRef = forms.servicesForm.current
     } else if (current === 1) {
       formRef = forms.personalInfoForm.current
     }
@@ -188,7 +164,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
       const booking: any = {
         userId: bookingValues.employeeId || "",
         teamId: undefined,
-        serviceId: bookingValues.serviceId || "",
+        servicesId: bookingValues.serviceId || "",
         customer: {
           id: customerValues.id || "",
           fullName: customerValues.FullName || "",
@@ -266,9 +242,8 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
   }
 
   const onReset = async () => {
-    setRawBookingData(undefined)
-    setRawServiceData(undefined)
-    setRawEmployeeData(undefined)
+    setServicesData(undefined)
+    setEmployeesData(undefined)
     setBookingValues(initialBookingState)
     setCustomerValues(initialCustomerState)
     setFormValues(initialFormValues)
@@ -287,15 +262,12 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
 
   const fetchData = async () => {
     try {
-      const [appointmentsResponse, servicesResponse, employeesResponse] = await Promise.all([
-        getAppointments(tenantId, apiUrl),
+      const [servicesResponse, employeesResponse] = await Promise.all([
         getServices(tenantId, apiUrl),
         getTeamMembers(tenantId, apiUrl)
       ])
-      setRawBookingData(appointmentsResponse)
-      setRawServiceData(servicesResponse.data)
-      setRawEmployeeData(employeesResponse.data.data)
-      setCompany(undefined)
+      setServicesData(servicesResponse.data.data)
+      setEmployeesData(employeesResponse.data.data)
     } catch (error) {
       console.error('Something went wrong:', error)
     }

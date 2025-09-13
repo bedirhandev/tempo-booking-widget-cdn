@@ -1,13 +1,11 @@
-// TimeSelector.tsx
 import React from 'react';
 import { Form, Select } from 'antd';
 import { ClockCircleOutlined } from '@ant-design/icons';
 import { useIsMobile } from '../hooks/useIsMobile';
-import TimeSelectorMobile from './TimeSelectorMobile'; // Your existing mobile version
-import dayjs from 'dayjs';
+import TimeSelectorMobile from './TimeSelectorMobile';
 
 interface AvailableTime {
-    time: string;
+    time: string; // Now contains the full time range like "08:00 - 08:30"
     disabled: boolean;
     injected?: boolean;
 }
@@ -19,7 +17,6 @@ interface TimeSelectorProps {
     required?: boolean;
     requiredMessage?: string;
     availableTimes: AvailableTime[];
-    serviceDuration?: number;
     allowClear?: boolean;
     style?: React.CSSProperties;
 }
@@ -39,7 +36,6 @@ const TimeSelector: React.FC<TimeSelectorProps> = (props) => {
         required = true,
         requiredMessage = 'Please select a time',
         availableTimes,
-        serviceDuration = 0,
         allowClear = true,
         style,
     } = props;
@@ -77,19 +73,11 @@ const TimeSelector: React.FC<TimeSelectorProps> = (props) => {
                     allowClear={allowClear}
                     style={style}
                     suffixIcon={<ClockCircleOutlined />}
-                    options={availableTimes.map(({ time, disabled, injected }) => {
-                        const startTimeMoment = dayjs(time, 'HH:mm');
-                        const endTimeMoment = startTimeMoment.add(serviceDuration, 'minute');
-                        const timeDisplay = serviceDuration > 0
-                            ? `${time} - ${endTimeMoment.format('HH:mm')}`
-                            : time;
-
-                        return {
-                            value: time,
-                            label: injected ? `${timeDisplay} (original)` : timeDisplay,
-                            disabled,
-                        };
-                    })}
+                    options={availableTimes.map(({ time, disabled, injected }) => ({
+                        value: time,
+                        label: injected ? `${time} (original)` : time,
+                        disabled,
+                    }))}
                 />
             </>
         </Form.Item>

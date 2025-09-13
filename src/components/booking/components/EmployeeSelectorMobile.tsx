@@ -4,14 +4,10 @@ import { Form } from 'antd';
 import { CheckList, Popup } from 'antd-mobile';
 import { CloseCircleFill, DownOutline } from 'antd-mobile-icons';
 import type { CheckListValue } from 'antd-mobile/es/components/check-list';
-
-interface Employee {
-    id: string;
-    name: string;
-}
+import type { TeamMember } from '@/components/booking/types/index'
 
 interface AvailableEmployee {
-    employee: Employee;
+    employee: TeamMember;
     disabled: boolean;
 }
 
@@ -43,7 +39,7 @@ const EmployeeInput = forwardRef<any, EmployeeInputProps>(
         const [tempValue, setTempValue] = useState<CheckListValue[]>([]);
 
         const selectedEmployee = value
-            ? availableEmployees.find(ae => ae.employee.id === value)?.employee
+            ? availableEmployees.find(ae => ae.employee.id === Number(value))?.employee
             : null;
 
         // Filter only enabled employees
@@ -178,7 +174,7 @@ const EmployeeInput = forwardRef<any, EmployeeInputProps>(
                             </button>
                         </div>
                     </div>
-                    
+
                     <div style={{ overflowY: 'auto', maxHeight: 'calc(70vh - 60px)' }}>
                         {enabledEmployees.length > 0 ? (
                             <CheckList
@@ -196,9 +192,9 @@ const EmployeeInput = forwardRef<any, EmployeeInputProps>(
                                 ))}
                             </CheckList>
                         ) : (
-                            <div style={{ 
-                                padding: '40px 16px', 
-                                textAlign: 'center', 
+                            <div style={{
+                                padding: '40px 16px',
+                                textAlign: 'center',
                                 color: '#999',
                                 fontSize: '14px'
                             }}>
