@@ -11,7 +11,7 @@ import ServicesStepSkeleton from '@/components/booking/steps/ServiceStepSkeleton
 
 import { createAppointment } from '@/components/booking/api'
 import { convertLocalTimeToUtc } from './utils/datetime'
-import { getServices, getTeamMembers } from '@/components/booking/api'
+import { getServices, getTeamMembers, getAvailableTimeSlots } from '@/components/booking/api'
 
 const { Step } = Steps
 
@@ -161,10 +161,15 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
 
       const { Notes } = customerValues
 
+      // Extract start time from time range
+      const startTime = bookingValues.time?.includes(' - ')
+        ? bookingValues.time.split(' - ')[0]
+        : bookingValues.time
+
       const booking: any = {
         userId: bookingValues.employeeId || "",
         teamId: undefined,
-        servicesId: bookingValues.serviceId || "",
+        serviceId: bookingValues.serviceId || "",
         customer: {
           id: customerValues.id || "",
           fullName: customerValues.FullName || "",
@@ -176,8 +181,8 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
         statusTypeId: "1",
         note: Notes,
         notificationEnabled: bookingValues.notificationEnabled,
-        date: bookingValues.date!.toDate(),
-        time: convertLocalTimeToUtc(bookingValues.time!) || ""
+        date: bookingValues.date!.toDate(), // Convert dayjs to Date object
+        time: startTime || "", //convertLocalTimeToUtc(bookingValues.time!) || ""
       };
 
       await createAppointment(booking, tenantId, apiUrl);
@@ -262,6 +267,15 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
 
   const fetchData = async () => {
     try {
+
+      const slots = await getAvailableTimeSlots(
+        tenantId,
+        1,
+        '2025-09-23',
+        '24hr',
+        "Europe/Brussels"
+      );
+
       const [servicesResponse, employeesResponse] = await Promise.all([
         getServices(tenantId, apiUrl),
         getTeamMembers(tenantId, apiUrl)

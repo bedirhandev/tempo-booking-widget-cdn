@@ -159,6 +159,11 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
 
             const { Notes } = customerValues
 
+            // Extract start time from time range
+            const startTime = bookingValues.time?.includes(' - ')
+                ? bookingValues.time.split(' - ')[0]
+                : bookingValues.time
+
             const booking: any = {
                 userId: bookingValues.employeeId || "",
                 teamId: undefined,
@@ -174,8 +179,8 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
                 statusTypeId: "1",
                 note: Notes,
                 notificationEnabled: bookingValues.notificationEnabled,
-                date: bookingValues.date!.toDate(),
-                time: bookingValues.time || ""
+                date: bookingValues.date!.toDate(), // Convert dayjs to Date object
+                time: startTime || "", //convertLocalTimeToUtc(bookingValues.time!) || ""
             };
 
             await createAppointment(booking, tenantId, apiUrl);

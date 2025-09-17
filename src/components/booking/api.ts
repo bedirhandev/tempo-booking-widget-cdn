@@ -40,13 +40,17 @@ export async function getAvailableTimeSlots(
   serviceId: number,
   date: string,
   timeFormat: '12hr' | '24hr' = '24hr',
+  timezone?: string,
   baseUrl: string = defaultBaseUrl
 ): Promise<AxiosResponse> {
+  const userTimezone = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  
   const response = await axios.get(`${baseUrl}/${tenantId}/available-time-slots`, {
     params: {
       serviceId,
-      date,
-      timeFormat
+      date, // User's local date
+      timeFormat,
+      timezone: userTimezone
     }
   });
   return response;

@@ -102,10 +102,26 @@ export interface Booking {
 }
 
 export interface AvailableTime {
+    id: number;
+
+    // Human-friendly label strings
     time: string;
     disabled: boolean;
     injected?: boolean;
+
+    // Business/localized info
+    business_datetime_start: string; // ISO (UTC)
+    business_datetime_end: string;   // ISO (UTC)
+    business_start_time: string;     // "08:00"
+    business_end_time: string;       // "08:30"
+    business_date: string;           // "YYYY-MM-DD"
+
+    // User-facing info (already in user tz)
+    user_start_time: string;         // "08:00"
+    user_end_time: string;           // "08:30"
+    user_date: string;               // "YYYY-MM-DD"
 }
+
 export interface AvailableEmployee {
     employee: TeamMember
     disabled: boolean

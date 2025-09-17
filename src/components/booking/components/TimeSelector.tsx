@@ -3,12 +3,7 @@ import { Form, Select } from 'antd';
 import { ClockCircleOutlined } from '@ant-design/icons';
 import { useIsMobile } from '../hooks/useIsMobile';
 import TimeSelectorMobile from './TimeSelectorMobile';
-
-interface AvailableTime {
-    time: string; // Now contains the full time range like "08:00 - 08:30"
-    disabled: boolean;
-    injected?: boolean;
-}
+import type { AvailableTime } from '@/components/booking/types/index';
 
 interface TimeSelectorProps {
     name?: string;
@@ -73,9 +68,9 @@ const TimeSelector: React.FC<TimeSelectorProps> = (props) => {
                     allowClear={allowClear}
                     style={style}
                     suffixIcon={<ClockCircleOutlined />}
-                    options={availableTimes.map(({ time, disabled, injected }) => ({
-                        value: time,
-                        label: injected ? `${time} (original)` : time,
+                    options={availableTimes.map(({ time, disabled, injected, business_datetime_start }) => ({
+                        value: business_datetime_start,      // ✅ store the ISO
+                        label: injected ? `${time} (original)` : time,  // ✅ show local time
                         disabled,
                     }))}
                 />

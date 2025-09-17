@@ -1,15 +1,20 @@
 import React, { useMemo, useCallback } from 'react'
 import { Form, Row, Col } from 'antd'
-import type { Booking, TeamMember, FormValues, Service, AvailableEmployee } from '@/components/booking/types/index'
+import type { Booking, TeamMember, FormValues, Service, AvailableEmployee, AvailableTime } from '@/components/booking/types/index'
 import dayjs, { Dayjs } from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 import ServiceSelectorMobile from '@/components/booking/components/ServiceSelectorMobile'
 import DateSelectorMobile from '@/components/booking/components/DateSelectorMobile'
 import TimeSelectorMobile from '@/components/booking/components/TimeSelectorMobile'
 import EmployeeSelectorMobile from '@/components/booking/components/EmployeeSelectorMobile'
-import { useAvailableTimes } from '@/components/booking/hooks/useAvailableTimes' // Custom hook
+import { useAvailableTimes } from '@/components/booking/hooks/useAvailableTimes'
 
 dayjs.extend(isoWeek)
+
+// Extended type for local time slots
+interface LocalAvailableTime extends AvailableTime {
+    utcTime?: string
+}
 
 interface ServiceStepProps {
     formRef: React.RefObject<any>
@@ -32,6 +37,51 @@ const ServiceStepMobile: React.FC<ServiceStepProps> = ({
 }) => {
     const [form] = Form.useForm()
 
+    // Form watchers (moved up to fix scoping issues)
+    const selectedServiceId = Form.useWatch('service', form)
+    const selectedDate: Dayjs | undefined = Form.useWatch('date', form)
+    const selectedTime = Form.useWatch('time', form)
+
+    // Custom hook for available times (moved up after form watchers)
+    const { availableTimes, isLoadingTimes } = useAvailableTimes({
+        tenantId,
+        serviceId: selectedServiceId,
+        date: selectedDate?.format('YYYY-MM-DD')
+    })
+
+    // Helper function to convert UTC time slots to local timezone
+    const convertTimeSlotToLocal = useCallback((timeSlot: AvailableTime, selectedDate: Dayjs): LocalAvailableTime => {
+        // Parse the UTC time and combine with selected date
+        const [startTime, endTime] = timeSlot.time.split(' - ')
+
+        // Create full UTC datetime
+        const startDateTime = dayjs.utc(`${selectedDate.format('YYYY-MM-DD')} ${startTime}`)
+        const endDateTime = dayjs.utc(`${selectedDate.format('YYYY-MM-DD')} ${endTime}`)
+
+        // Convert to local timezone
+        const localStart = startDateTime.local()
+        const localEnd = endDateTime.local()
+
+        // Format back to time string
+        const localTimeSlot = `${localStart.format('HH:mm')} - ${localEnd.format('HH:mm')}`
+
+        return {
+            ...timeSlot,
+            time: localTimeSlot,
+            // Store original UTC time for API submission
+            utcTime: timeSlot.time
+        }
+    }, [])
+
+    // Convert all available times to local timezone
+    const localAvailableTimes = useMemo(() => {
+        if (!selectedDate || !availableTimes.length) {
+            return availableTimes
+        }
+
+        return availableTimes.map(timeSlot => convertTimeSlotToLocal(timeSlot, selectedDate))
+    }, [availableTimes, selectedDate, convertTimeSlotToLocal])
+
     // Memoized data transformations
     const { services, employees } = useMemo(() => ({
         services: servicesData.map(service => ({
@@ -52,20 +102,25 @@ const ServiceStepMobile: React.FC<ServiceStepProps> = ({
         })) || []
     }), [servicesData, employeesData])
 
-    // Form watchers
-    const selectedServiceId = Form.useWatch('service', form)
-    const selectedDate: Dayjs | undefined = Form.useWatch('date', form)
-    const selectedTime = Form.useWatch('time', form)
-
-    // Custom hook for available times
-    const { availableTimes, isLoadingTimes } = useAvailableTimes({
-        tenantId,
-        serviceId: selectedServiceId,
-        date: selectedDate?.format('YYYY-MM-DD')
-    })
-
     // Assign form ref
     formRef.current = form
+
+    // Helper function to convert local time back to UTC for API
+    const convertLocalTimeToUtc = useCallback((localTime: string, selectedDate: Dayjs): string => {
+        const [startTime] = localTime.split(' - ')
+        const localDateTime = dayjs(`${selectedDate.format('YYYY-MM-DD')} ${startTime}`)
+        const utcDateTime = localDateTime.utc()
+        return utcDateTime.format('HH:mm')
+    }, [])
+
+    // Helper function to get UTC time from selected local time
+    const getUtcTimeFromLocal = useCallback((localTime: string): string => {
+        if (!selectedDate) return localTime
+
+        // Find the original UTC time from the local available times
+        const localTimeSlot = localAvailableTimes.find(slot => slot.time === localTime) as LocalAvailableTime
+        return localTimeSlot?.utcTime || localTime
+    }, [localAvailableTimes, selectedDate])
 
     // Helper functions
     const convertTimeToMinutes = useCallback((timeString: string): number => {
@@ -128,7 +183,10 @@ const ServiceStepMobile: React.FC<ServiceStepProps> = ({
                 return { employee, disabled: true }
             }
 
-            const selectedTimeMinutes = convertTimeToMinutes(selectedTime)
+            // Get the UTC time for comparison with employee schedules
+            const utcTime = getUtcTimeFromLocal(selectedTime)
+            const selectedTimeMinutes = convertTimeToMinutes(utcTime)
+
             const isAvailable = daySchedule.timeSlots.some(slot => {
                 const startMinutes = convertTimeToMinutes(slot.start)
                 const endMinutes = convertTimeToMinutes(slot.end)
@@ -137,7 +195,7 @@ const ServiceStepMobile: React.FC<ServiceStepProps> = ({
 
             return { employee, disabled: !isAvailable }
         })
-    }, [selectedServiceId, selectedDate, selectedTime, employees, isEmployeeAbsent, convertTimeToMinutes])
+    }, [selectedServiceId, selectedDate, selectedTime, employees, isEmployeeAbsent, convertTimeToMinutes, getUtcTimeFromLocal])
 
     // Event handlers
     const handleValuesChange = useCallback((changedValues: any) => {
@@ -155,12 +213,18 @@ const ServiceStepMobile: React.FC<ServiceStepProps> = ({
         // Update states
         const selectedService = services.find(service => service.id == allValues.service)
 
+        // Get UTC time for storage
+        let utcTime = allValues.time
+        if (allValues.time && selectedDate) {
+            utcTime = getUtcTimeFromLocal(allValues.time)
+        }
+
         setFormValues(prev => ({
             ...prev,
             service: selectedService?.name,
             employee: employees.find(employee => employee.id == allValues.employee)?.name,
-            date: allValues.date,
-            time: allValues.time,
+            date: allValues.date ? allValues.date.format('MMMM DD, YYYY') : undefined,
+            time: allValues.time, // Display local time
             price: selectedService ? String(selectedService.price) : undefined
         }))
 
@@ -169,11 +233,11 @@ const ServiceStepMobile: React.FC<ServiceStepProps> = ({
             serviceId: allValues.service ? String(allValues.service) : undefined,
             employeeId: allValues.employee ? String(allValues.employee) : undefined,
             date: allValues.date,
-            time: allValues.time,
+            time: utcTime, // Store UTC time for API
             note: allValues.notes,
             notificationEnabled: allValues.notifications
         }))
-    }, [form, services, employees, setFormValues, setBookingValues])
+    }, [form, services, employees, setFormValues, setBookingValues, selectedDate, getUtcTimeFromLocal])
 
     const formatPrice = useCallback((price: number, currency: string = '$'): string => {
         return `${currency}${price.toFixed(2)}`
@@ -216,10 +280,10 @@ const ServiceStepMobile: React.FC<ServiceStepProps> = ({
                             isLoadingTimes
                                 ? "Loading available times..."
                                 : !selectedServiceId || !selectedDate
-                                    ? "Select a time"
+                                    ? "Select service and date first"
                                     : "Select a time"
                         }
-                        availableTimes={availableTimes}
+                        availableTimes={localAvailableTimes}
                         allowClear
                     />
                 </Col>
