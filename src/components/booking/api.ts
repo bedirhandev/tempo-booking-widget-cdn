@@ -1,6 +1,6 @@
 import axios, { type AxiosResponse } from "axios";
 import type { ServicesResponse, TeamMembersResponse } from "@/components/booking/types/index"
-import { transformBookingToLocal, transformUserTimeEntriesToLocal } from "./utils/datetime";
+import { transformBookingToLocal } from "./utils/datetime";
 
 const defaultBaseUrl: string = 'http://127.0.0.1:8000/api/v1';
 

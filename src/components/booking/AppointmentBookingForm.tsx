@@ -10,8 +10,7 @@ import type { Booking, Customer, FormValues, Service, TeamMember } from '@/compo
 import ServicesStepSkeleton from '@/components/booking/steps/ServiceStepSkeleton'
 
 import { createAppointment } from '@/components/booking/api'
-import { convertLocalTimeToUtc } from './utils/datetime'
-import { getServices, getTeamMembers, getAvailableTimeSlots } from '@/components/booking/api'
+import { getServices, getTeamMembers } from '@/components/booking/api'
 
 const { Step } = Steps
 
@@ -267,15 +266,6 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
 
   const fetchData = async () => {
     try {
-
-      const slots = await getAvailableTimeSlots(
-        tenantId,
-        1,
-        '2025-09-23',
-        '24hr',
-        "Europe/Brussels"
-      );
-
       const [servicesResponse, employeesResponse] = await Promise.all([
         getServices(tenantId, apiUrl),
         getTeamMembers(tenantId, apiUrl)

@@ -77,12 +77,6 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
 
   formRef.current = form
 
-  // Convert a "displayed local time" back to the UTC slot for API persistence (if needed elsewhere)
-  const getUtcTimeFromSelected = useCallback((timeLabel: string): string | undefined => {
-    const slot = availableTimes.find(s => s.time === timeLabel)
-    return slot?.business_datetime_start
-  }, [availableTimes])
-
   // Utility to convert "HH:mm" → minutes for comparison
   const convertTimeToMinutes = useCallback((timeString: string): number => {
     const [hours, minutes] = timeString.split(':').map(Number)

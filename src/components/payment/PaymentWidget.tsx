@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import PaymentForm from './PaymentForm';
