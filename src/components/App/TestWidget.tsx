@@ -1,6 +1,7 @@
 // src/pages/TestWidget.tsx
 import React from 'react'
 import WidgetContainer from '@/components/widget/WidgetContainer'
+import PaymentWidget from '@/components/payment/PaymentWidget'
 import type { WidgetConfig } from '@/types/widget'
 
 const TestWidget: React.FC = () => {
@@ -32,6 +33,14 @@ const TestWidget: React.FC = () => {
         console.log('Widget loaded with ID:', widgetId)
     }
 
+    // Read demo params for PaymentWidget
+    const params = new URLSearchParams(window.location.search)
+    const demoTenantId = params.get('tenantId') || widgetConfig.tenantId
+    const demoBookingId = params.get('bookingId')
+    const demoApiBaseUrl = params.get('apiBaseUrl') || 'http://127.0.0.1:8000/api/v1'
+    const demoEmail = params.get('email') || undefined
+    const demoName = params.get('name') || undefined
+
     return (
         <div style={{
             minHeight: '100vh',
@@ -53,6 +62,36 @@ const TestWidget: React.FC = () => {
                     onError={handleError}
                     onLoad={handleLoad}
                 />
+
+                {/* Stripe Payment Demo */}
+                <div style={{ marginTop: '40px', padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                    <h2 style={{ marginTop: 0 }}>Stripe Payment Demo</h2>
+                    <p style={{ marginTop: 0, color: '#666' }}>
+                        Provide tenantId and bookingId via query params to try the payment flow:
+                        <code> ?tenantId=...&bookingId=...&apiBaseUrl=http://127.0.0.1:8000/api/v1</code>
+                    </p>
+
+                    {demoTenantId && demoBookingId ? (
+                        <PaymentWidget
+                            tenantId={demoTenantId}
+                            bookingId={demoBookingId}
+                            apiBaseUrl={demoApiBaseUrl}
+                            email={demoEmail}
+                            name={demoName}
+                            onPaymentSuccess={(bookingId) => {
+                                console.log('Payment successful for booking:', bookingId)
+                            }}
+                            onPaymentFailure={(err) => {
+                                console.error('Payment failed:', err)
+                            }}
+                            onReady={() => console.log('PaymentWidget ready')}
+                        />
+                    ) : (
+                        <div style={{ color: '#c00' }}>
+                            Missing tenantId or bookingId in query string. Append them to the URL to enable the demo.
+                        </div>
+                    )}
+                </div>
 
                 {/* Debug info */}
                 <div style={{

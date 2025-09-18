@@ -77,3 +77,38 @@ export async function getTeamMembers(
     throw error;
   }
 };
+
+export type CreatePaymentIntentPayload = {
+  email?: string;
+  name?: string;
+};
+
+export type PaymentIntentResponse = {
+  clientSecret: string;
+  publishableKey: string;
+  amount: number;
+  currency: string;
+  bookingId: string;
+};
+
+/**
+ * Create a payment intent for an appointment (server is the source of truth for pricing).
+ * POST /api/v1/{tenantId}/appointments/{bookingId}/payment-intents
+ */
+export async function createAppointmentPaymentIntent(
+  tenantId: string,
+  bookingId: string,
+  payload: CreatePaymentIntentPayload = {},
+  baseUrl: string = defaultBaseUrl
+): Promise<PaymentIntentResponse> {
+  try {
+    const response = await axios.post(
+      `${baseUrl}/${tenantId}/appointments/${bookingId}/payment-intents`,
+      payload
+    );
+    return response.data as PaymentIntentResponse;
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+    throw error;
+  }
+}
