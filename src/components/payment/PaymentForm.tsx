@@ -25,6 +25,7 @@ export default function PaymentForm({
 
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [succeeded, setSucceeded] = useState(false);
 
   const formatAmount = (value: number, curr: string) => {
     try {
@@ -66,9 +67,10 @@ export default function PaymentForm({
       // If no error returned, Stripe has confirmed the payment.
       // Webhook will mark the booking as paid on the backend.
       onStatusChange?.('succeeded');
-      setMessage('Payment confirmed. We’re updating your appointment…');
+      setMessage('Payment successful');
       onPaymentSuccess?.(bookingId);
-      // Keep the button disabled to avoid duplicate submissions after success
+      setSucceeded(true);
+      setSubmitting(false);
     } catch (err: any) {
       const errMsg = err?.message || 'Unexpected error during confirmation.';
       setMessage(errMsg);
@@ -77,6 +79,14 @@ export default function PaymentForm({
       setSubmitting(false);
     }
   };
+
+  if (succeeded) {
+    return (
+      <div role="status" aria-live="polite" style={{ fontSize: 14, color: '#333' }}>
+        Payment successful
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
