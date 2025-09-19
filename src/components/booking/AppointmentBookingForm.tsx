@@ -744,11 +744,52 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
           </>
         ) : (
           <>
-            <Steps current={current} style={{ marginBottom: 24 }}>
-              {steps.map((item) => (
-                <Step key={item.title} title={item.title} />
-              ))}
-            </Steps>
+            <Steps
+              current={current < steps.length - 1 ? 0 : 0} // Current step is always position 0 in our filtered view
+              type="navigation"
+              size="small"
+              style={{ marginBottom: 24 }}
+              items={[
+                // Current step
+                {
+                  title: steps[current].title,
+                  status: 'process',
+                  icon: <div style={{
+                    backgroundColor: '#1890ff',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: 24,
+                    height: 24,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 12,
+                    fontWeight: 'bold'
+                  }}>
+                    {current + 1}
+                  </div>
+                },
+                // Next step (if exists)
+                ...(current < steps.length - 1 ? [{
+                  title: steps[current + 1].title,
+                  status: 'wait' as const,
+                  icon: <div style={{
+                    backgroundColor: '#d9d9d9',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: 24,
+                    height: 24,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 12,
+                    fontWeight: 'bold'
+                  }}>
+                    {current + 2}
+                  </div>
+                }] : [])
+              ]}
+            />
 
             <div className='steps-content'>
               {steps[current].content}
@@ -795,7 +836,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
                       onClick={() => next()}
                       disabled={loading || submitting}
                     >
-                      Complete Booking
+                      Next
                     </Button>
                   </Col>
                 )}
