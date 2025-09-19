@@ -83,7 +83,17 @@ export default function PaymentWidget({
         setStatus('idle');
       } catch (e: any) {
         if (cancelled) return;
-        const msg = e?.response?.data?.message || e?.message || 'Failed to initialize payment.';
+
+        // If backend says "Booking already paid" (HTTP 409), treat as success and don't try to create another intent
+        const httpStatus = e?.response?.status;
+        const backendMsg = e?.response?.data?.error || e?.response?.data?.message;
+        if (httpStatus === 409 || (typeof backendMsg === 'string' && backendMsg.toLowerCase().includes('already paid'))) {
+          onPaymentSuccess?.(bookingId);
+          setStatus('succeeded');
+          return;
+        }
+
+        const msg = backendMsg || e?.message || 'Failed to initialize payment.';
         setError(msg);
         setStatus('failed');
       }
@@ -97,6 +107,16 @@ export default function PaymentWidget({
   }, [tenantId, bookingId, email, name, effectiveApiBaseUrl, onReady]);
 
   const onFormStatusChange = (s: Status) => setStatus(s);
+
+  // If we already know the booking is paid (e.g., backend returned 409 "already paid"),
+  // short-circuit and show success instead of trying to render a new PaymentElement
+  if (status === 'succeeded') {
+    return (
+      <div role="status" aria-live="polite" style={{ fontSize: 14, color: '#333' }}>
+        Payment successful
+      </div>
+    );
+  }
 
   if (!tenantId || !bookingId) {
     return (
