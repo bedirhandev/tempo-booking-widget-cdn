@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Steps, Button, Card, Row, Col, Result } from 'antd'
+import { Steps, Button, Card, Row, Col, Result, Radio } from 'antd'
 import ServiceStep from '@/components/booking/steps/ServiceStep'
 import PersonalInfoStep from '@/components/booking/steps/PersonalInfoStep'
 import SummaryStep from '@/components/booking/steps/SummaryStep'
@@ -11,6 +11,7 @@ import ServicesStepSkeleton from '@/components/booking/steps/ServiceStepSkeleton
 
 import { createAppointment } from '@/components/booking/api'
 import { getServices, getTeamMembers } from '@/components/booking/api'
+import PaymentWidget from '@/components/payment/PaymentWidget'
 
 const { Step } = Steps
 
@@ -81,9 +82,54 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
     description: ''
   })
 
+  // Payment decision and created booking id
+  const [paymentChoice, setPaymentChoice] = useState<'pay_now' | 'pay_later' | null>(null)
+  const [createdBookingId, setCreatedBookingId] = useState<string | null>(null)
+
+  // Declare before steps to avoid "used before declaration"
+  function handlePaymentSuccess(bookingId: string) {
+    setResultState({
+      show: true,
+      status: 'success',
+      title: 'Payment successful',
+      description: 'Your payment was confirmed. Your appointment will reflect as paid.'
+    });
+    setBookingSuccessful(true);
+  }
+
   const forms = {
     serviceForm: React.createRef<any>(),
     personalInfoForm: React.createRef<any>()
+  }
+
+  // Build booking payload from current state (used for both pay-now and pay-later)
+  const buildBookingPayload = () => {
+    const { Notes } = customerValues
+
+    const startTime = bookingValues.time?.includes(' - ')
+      ? bookingValues.time.split(' - ')[0]
+      : bookingValues.time
+
+    const booking: any = {
+      userId: bookingValues.employeeId || "",
+      teamId: undefined,
+      serviceId: bookingValues.serviceId || "",
+      customer: {
+        id: customerValues.id || "",
+        fullName: customerValues.FullName || "",
+        email: customerValues.Email || "",
+        phone: customerValues.Phone || "",
+        notes: customerValues.Notes || "",
+        isRegistered: customerValues.isRegistered || false
+      },
+      statusTypeId: "1",
+      note: Notes,
+      notificationEnabled: bookingValues.notificationEnabled,
+      date: bookingValues.date!.toDate(), // Convert dayjs to Date object
+      time: startTime || "",
+    };
+
+    return booking;
   }
 
   const steps = [
@@ -114,12 +160,61 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
           setCustomerValues={setCustomerValues}
         />
       )
+    },
+    {
+      title: 'Payment Options',
+      content: (
+        <div style={{ display: 'grid', gap: 12 }}>
+          <p style={{ marginBottom: 8 }}>Choose how you'd like to proceed:</p>
+          <Radio.Group
+            value={paymentChoice}
+            onChange={(e) => setPaymentChoice(e.target.value)}
+            optionType="button"
+            buttonStyle="solid"
+          >
+            <Radio.Button value="pay_now">Pay now</Radio.Button>
+            <Radio.Button value="pay_later">Pay later</Radio.Button>
+          </Radio.Group>
+          {!paymentChoice && (
+            <div style={{ fontSize: 12, color: '#999' }}>
+              You can continue after selecting one of the options.
+            </div>
+          )}
+        </div>
+      )
+    },
+    {
+      title: 'Payment',
+      content: (
+        <div style={{ display: 'grid', gap: 12 }}>
+          {paymentChoice !== 'pay_now' ? (
+            <div style={{ color: '#666' }}>
+              Please go back and choose "Pay now", or select "Pay later" to finish without payment.
+            </div>
+          ) : !createdBookingId ? (
+            <div>Preparing payment…</div>
+          ) : (
+            <PaymentWidget
+              tenantId={tenantId}
+              bookingId={createdBookingId!}
+              apiBaseUrl={apiUrl}
+              email={customerValues.Email || undefined}
+              name={customerValues.FullName || undefined}
+              onPaymentSuccess={handlePaymentSuccess}
+              onPaymentFailure={(err: Error) => {
+                console.error('Payment failed:', err);
+              }}
+            />
+          )}
+        </div>
+      )
     }
   ]
 
   const next = async () => {
-    if (submitting) return
+    if (submitting) return;
 
+    // Validate forms for the first two steps
     let formRef
     if (current === 0) {
       formRef = forms.serviceForm.current
@@ -129,15 +224,50 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
     if (formRef) {
       try {
         await formRef.validateFields()
-        if (current === steps.length - 1) {
-          await onSubmit()
-        } else {
-          setCurrent(current + 1)
-        }
-      } catch (error) {
-        // Handle validation error
+      } catch {
+        return
       }
-    } else {
+    }
+
+    // Payment Options step index = 2
+    if (current === 2) {
+      if (!paymentChoice) return;
+
+      if (paymentChoice === 'pay_later') {
+        // Directly create booking and finish (no payment)
+        await onSubmit();
+        return;
+      }
+
+      // pay_now: ensure booking exists to obtain bookingId, then go to Payment step
+      try {
+        setSubmitting(true)
+
+        const booking = buildBookingPayload()
+        const createResp = await createAppointment(booking, tenantId, apiUrl)
+        const newId =
+          (createResp?.id ?? createResp?.data?.id ?? createResp?.booking?.id ?? createResp?.data?.booking?.id)
+        if (!newId) {
+          throw new Error('Could not determine bookingId from createAppointment response')
+        }
+        setCreatedBookingId(String(newId))
+        setCurrent(current + 1)
+      } catch (err) {
+        console.error('Error preparing payment:', err)
+        setResultState({
+          show: true,
+          status: 'error',
+          title: 'Could not start payment',
+          description: 'We were unable to prepare the payment step. Please try again or choose Pay later.'
+        })
+      } finally {
+        setSubmitting(false)
+      }
+      return;
+    }
+
+    // Default step advance
+    if (current < steps.length - 1) {
       setCurrent(current + 1)
     }
   }
@@ -145,6 +275,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
   const prev = () => {
     setCurrent(current - 1)
   }
+
 
   const onSubmit = async () => {
     try {
@@ -245,12 +376,15 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
     }
   }
 
+
   const onReset = async () => {
     setServicesData(undefined)
     setEmployeesData(undefined)
     setBookingValues(initialBookingState)
     setCustomerValues(initialCustomerState)
     setFormValues(initialFormValues)
+    setPaymentChoice(null)
+    setCreatedBookingId(null)
     setBookingSuccessful(false)
     setCurrent(0)
     setLoading(true)
@@ -371,7 +505,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
             <div className='steps-action' style={{ marginTop: 16 }}>
               <Row gutter={[16, 16]}>
                 {current > 0 && (
-                  <Col xs={24} sm={12}>
+                  <Col xs={24} sm={current === 3 ? 24 : 12}>
                     <Button
                       block
                       size='middle'
@@ -382,17 +516,19 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
                     </Button>
                   </Col>
                 )}
-                <Col xs={24} sm={current > 0 ? 12 : 24}>
-                  <Button
-                    type='primary'
-                    block
-                    size='middle'
-                    onClick={() => next()}
-                    disabled={loading || submitting}
-                  >
-                    {current === steps.length - 1 ? 'Submit' : 'Next'}
-                  </Button>
-                </Col>
+                {current !== 3 && (
+                  <Col xs={24} sm={current > 0 ? 12 : 24}>
+                    <Button
+                      type='primary'
+                      block
+                      size='middle'
+                      onClick={() => next()}
+                      disabled={loading || submitting}
+                    >
+                      {current === steps.length - 1 ? 'Submit' : 'Next'}
+                    </Button>
+                  </Col>
+                )}
               </Row>
             </div>
           </>

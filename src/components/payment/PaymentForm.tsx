@@ -52,7 +52,10 @@ export default function PaymentForm({
         elements,
         // Avoid full page redirect in widgets
         redirect: 'if_required',
-        // Optionally you could provide confirmParams.return_url if your backend requires a redirect flow.
+        confirmParams: {
+          return_url: window.location.href,
+          // Optionally you could provide confirmParams.return_url if your backend requires a redirect flow.
+        }
       });
 
       if (error) {
