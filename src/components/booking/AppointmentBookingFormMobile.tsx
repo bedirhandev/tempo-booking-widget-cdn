@@ -116,6 +116,47 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
         }
     ]
 
+// Build widget metadata snapshot to persist in bookings.widget_metadata (mobile)
+const buildWidgetMetadata = () => {
+  try {
+    const url = new URL(window.location.href);
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const utm: Record<string, string> = {};
+    ['utm_source','utm_medium','utm_campaign','utm_term','utm_content'].forEach((k) => {
+      const v = url.searchParams.get(k);
+      if (v) utm[k] = v;
+    });
+    return {
+      source: 'widget',
+      env: {
+        href: url.href,
+        locale: typeof navigator !== 'undefined' ? navigator.language : undefined,
+        browser: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+        timezone: tz,
+      },
+      utm,
+      form: {
+        serviceId: bookingValues.serviceId,
+        employeeId: bookingValues.employeeId,
+        date: bookingValues.date ? (bookingValues.date as any).format?.('YYYY-MM-DD') : undefined,
+        time: bookingValues.time,
+        notificationEnabled: bookingValues.notificationEnabled,
+        customer: {
+          id: customerValues.id || undefined,
+          fullName: customerValues.FullName || undefined,
+          email: customerValues.Email || undefined,
+          phone: customerValues.Phone || undefined,
+        },
+      },
+      step: current,
+    };
+  } catch {
+    return {
+      source: 'widget',
+      step: current,
+    };
+  }
+}
     const next = async () => {
         if (submitting) return
 
@@ -183,7 +224,11 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
                 time: startTime || "", //convertLocalTimeToUtc(bookingValues.time!) || ""
             };
 
-            await createAppointment(booking, tenantId, apiUrl);
+            await createAppointment(
+                { ...booking, metadata: buildWidgetMetadata() },
+                tenantId,
+                apiUrl
+            );
 
             // Show success result
             setResultState({

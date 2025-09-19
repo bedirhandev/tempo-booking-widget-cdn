@@ -11,7 +11,7 @@ import enUSMobile from 'antd-mobile/es/locales/en-US';
 
 function App() {
   const isMobile = useIsMobile();
-  const tenantId = "ab532175-912d-4e1c-afdd-291f92525ace";
+  const tenantId = "4fd9cfb5-1e4d-41a5-8f8e-f2506383004a";
 
   // Common UI wrapper
   const AppContent = () => (

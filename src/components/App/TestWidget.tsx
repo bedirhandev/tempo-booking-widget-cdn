@@ -7,7 +7,7 @@ import type { WidgetConfig } from '@/types/widget'
 const TestWidget: React.FC = () => {
     // Configuration for the widget
     const widgetConfig: WidgetConfig = {
-        tenantId: 'ab532175-912d-4e1c-afdd-291f92525ace', // Your tenant ID
+        tenantId: '4fd9cfb5-1e4d-41a5-8f8e-f2506383004a', // Your tenant ID
         apiUrl: 'http://localhost:8000/api/v1', // Your API URL (optional)
         primaryColor: '#1677ff', // Optional: custom primary color
         theme: 'light', // Optional: 'light' or 'dark'

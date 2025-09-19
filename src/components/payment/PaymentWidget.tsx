@@ -55,10 +55,19 @@ export default function PaymentWidget({
       setError(null);
 
       try {
+        // Build metadata to be merged into bookings.widget_metadata and a safe subset sent to Stripe
+        const metadata: Record<string, any> = {
+          paymentStep: 'started',
+          env: {
+            locale: typeof navigator !== 'undefined' ? navigator.language : undefined,
+            browser: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+          },
+        };
+
         const res = await createAppointmentPaymentIntent(
           tenantId,
           bookingId,
-          { email, name },
+          { email, name, metadata },
           effectiveApiBaseUrl
         );
 

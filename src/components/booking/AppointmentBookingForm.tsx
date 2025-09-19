@@ -4,13 +4,13 @@ import ServiceStep from '@/components/booking/steps/ServiceStep'
 import PersonalInfoStep from '@/components/booking/steps/PersonalInfoStep'
 import SummaryStep from '@/components/booking/steps/SummaryStep'
 import axios from 'axios'
+import dayjs from 'dayjs'
 
 import type { Booking, Customer, FormValues, Service, TeamMember } from '@/components/booking/types/index'
 
 import ServicesStepSkeleton from '@/components/booking/steps/ServiceStepSkeleton'
 
-import { createAppointment } from '@/components/booking/api'
-import { getServices, getTeamMembers } from '@/components/booking/api'
+import { createAppointment, getServices, getTeamMembers, getBookingByPaymentIntent } from '@/components/booking/api'
 import PaymentWidget from '@/components/payment/PaymentWidget'
 
 const { Step } = Steps
@@ -85,6 +85,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
   // Payment decision and created booking id
   const [paymentChoice, setPaymentChoice] = useState<'pay_now' | 'pay_later' | null>(null)
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null)
+  const [rehydrated, setRehydrated] = useState(false)
 
   // Declare before steps to avoid "used before declaration"
   function handlePaymentSuccess(bookingId: string) {
@@ -130,6 +131,48 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
     };
 
     return booking;
+  }
+
+  // Build widget metadata snapshot to persist in bookings.widget_metadata
+  const buildWidgetMetadata = () => {
+    try {
+      const url = new URL(window.location.href);
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const utm: Record<string, string> = {};
+      ['utm_source','utm_medium','utm_campaign','utm_term','utm_content'].forEach((k) => {
+        const v = url.searchParams.get(k);
+        if (v) utm[k] = v;
+      });
+      return {
+        source: 'widget',
+        env: {
+          href: url.href,
+          locale: typeof navigator !== 'undefined' ? navigator.language : undefined,
+          browser: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+          timezone: tz,
+        },
+        utm,
+        form: {
+          serviceId: bookingValues.serviceId,
+          employeeId: bookingValues.employeeId,
+          date: bookingValues.date ? bookingValues.date.format('YYYY-MM-DD') : undefined,
+          time: bookingValues.time,
+          notificationEnabled: bookingValues.notificationEnabled,
+          customer: {
+            id: customerValues.id || undefined,
+            fullName: customerValues.FullName || undefined,
+            email: customerValues.Email || undefined,
+            phone: customerValues.Phone || undefined,
+          },
+        },
+        step: current,
+      };
+    } catch {
+      return {
+        source: 'widget',
+        step: current,
+      };
+    }
   }
 
   const steps = [
@@ -244,7 +287,11 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
         setSubmitting(true)
 
         const booking = buildBookingPayload()
-        const createResp = await createAppointment(booking, tenantId, apiUrl)
+        const createResp = await createAppointment(
+          { ...booking, metadata: buildWidgetMetadata() },
+          tenantId,
+          apiUrl
+        )
         const newId =
           (createResp?.id ?? createResp?.data?.id ?? createResp?.booking?.id ?? createResp?.data?.booking?.id)
         if (!newId) {
@@ -315,7 +362,11 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
         time: startTime || "", //convertLocalTimeToUtc(bookingValues.time!) || ""
       };
 
-      await createAppointment(booking, tenantId, apiUrl);
+      await createAppointment(
+        { ...booking, metadata: buildWidgetMetadata() },
+        tenantId,
+        apiUrl
+      );
 
       // Show success result
       setResultState({
@@ -414,6 +465,83 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
   useEffect(() => {
     fetchData().then(() => setLoading(false))
   }, [])
+
+  // Rehydrate form after Stripe redirect by looking up booking via PaymentIntent ID
+  useEffect(() => {
+    if (rehydrated) return;
+
+    try {
+      const url = new URL(window.location.href);
+      const paymentIntentId = url.searchParams.get('payment_intent');
+      if (!paymentIntentId) return;
+
+      (async () => {
+        try {
+          const resp = await getBookingByPaymentIntent(tenantId, paymentIntentId, apiUrl);
+          const payload = resp.data?.booking ?? resp.data?.data ?? resp.data;
+          const b = payload?.booking ?? payload;
+
+          if (b) {
+            const bId = String(b.id ?? '');
+            if (bId) setCreatedBookingId(bId);
+
+            setBookingValues(prev => ({
+              ...prev,
+              serviceId: b.serviceId != null ? String(b.serviceId) : prev.serviceId,
+              employeeId: b.userId != null
+                ? String(b.userId)
+                : (b.employeeId != null ? String(b.employeeId) : prev.employeeId),
+              note: b.note ?? prev.note,
+              notificationEnabled: typeof b.notificationEnabled === 'boolean'
+                ? b.notificationEnabled
+                : prev.notificationEnabled,
+              date: b.date ? dayjs(b.date) : prev.date,
+              time: b.time ?? prev.time,
+            }));
+
+            const cust = b.customer ?? {};
+            setCustomerValues(prev => ({
+              ...prev,
+              id: cust.id != null ? String(cust.id) : prev.id,
+              FullName: cust.fullName ?? cust.FullName ?? prev.FullName,
+              Email: cust.email ?? prev.Email,
+              Phone: cust.phone ?? prev.Phone,
+              Notes: cust.notes ?? prev.Notes,
+              isRegistered: typeof cust.isRegistered === 'boolean' ? cust.isRegistered : prev.isRegistered,
+            }));
+
+            setFormValues(prev => ({
+              ...prev,
+              fullName: cust.fullName ?? prev.fullName,
+              email: cust.email ?? prev.email,
+              phoneNumber: cust.phone ?? prev.phoneNumber,
+              service: b.serviceId != null ? String(b.serviceId) : prev.service,
+              employee: b.userId != null
+                ? String(b.userId)
+                : (b.employeeId != null ? String(b.employeeId) : prev.employee),
+              date: b.date ?? prev.date,
+              time: b.time ?? prev.time,
+            }));
+
+            setPaymentChoice('pay_now');
+            setCurrent(3); // Jump directly to Payment step
+          }
+        } catch (e) {
+          console.error('Failed to restore booking from PaymentIntent:', e);
+        } finally {
+          setRehydrated(true);
+          // Clean URL to avoid re-triggering on refresh and hide sensitive params
+          try {
+            const cleanUrl = new URL(window.location.href);
+            ['payment_intent', 'payment_intent_client_secret', 'redirect_status'].forEach((k) =>
+              cleanUrl.searchParams.delete(k)
+            );
+            window.history.replaceState({}, document.title, cleanUrl.toString());
+          } catch {}
+        }
+      })();
+    } catch {}
+  }, [tenantId, apiUrl, rehydrated])
 
   return (
     <>

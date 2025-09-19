@@ -81,6 +81,8 @@ export async function getTeamMembers(
 export type CreatePaymentIntentPayload = {
   email?: string;
   name?: string;
+  // Arbitrary JSON to be merged into bookings.widget_metadata on the backend
+  metadata?: Record<string, any>;
 };
 
 export type PaymentIntentResponse = {
@@ -111,4 +113,19 @@ export async function createAppointmentPaymentIntent(
     console.error('Error creating payment intent:', error);
     throw error;
   }
+}
+
+/**
+ * Lookup booking by Stripe PaymentIntent ID (validated on backend with Stripe secret).
+ * GET /api/v1/{tenantId}/appointments/payment-intents/{payment_intent_id}/booking
+ */
+export async function getBookingByPaymentIntent(
+  tenantId: string,
+  paymentIntentId: string,
+  baseUrl: string = defaultBaseUrl
+): Promise<AxiosResponse<any>> {
+  const response = await axios.get(
+    `${baseUrl}/${tenantId}/appointments/payment-intents/${paymentIntentId}/booking`
+  );
+  return response;
 }
