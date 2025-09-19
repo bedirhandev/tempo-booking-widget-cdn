@@ -10,15 +10,6 @@ interface SummaryStepMobileProps {
 const SummaryStepMobile: React.FC<SummaryStepMobileProps> = ({ formValues }) => {
     return (
         <div>
-            <div style={{
-                fontSize: 16,
-                fontWeight: 500,
-                marginBottom: 16,
-                paddingLeft: 12
-            }}>
-                Appointment Summary
-            </div>
-
             <List mode='card'>
                 <List.Item
                     title='Service'

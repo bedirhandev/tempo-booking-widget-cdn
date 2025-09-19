@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Steps, Button, Card, Row, Col, Result, Radio } from 'antd'
+import { Steps, Button, Card, Row, Col, Result, Typography, Space } from 'antd'
+import { ClockCircleOutlined, CreditCardOutlined } from '@ant-design/icons';
 import ServiceStepMobile from '@/components/booking/steps/ServiceStepMobile'
 import PersonalInfoStepMobile from '@/components/booking/steps/PersonalInfoStepMobile'
 import SummaryStepMobile from '@/components/booking/steps/SummaryStepMobile'
@@ -8,7 +9,7 @@ import dayjs from 'dayjs'
 
 import type { Booking, Customer, FormValues, Service, TeamMember } from '@/components/booking/types/index'
 
-import ServicesStepSkeletonMobile from '@/components/booking/steps/ServiceStepSkeleton'
+import ServicesStepSkeleton from '@/components/booking/steps/ServiceStepSkeleton'
 
 import { createAppointment, getServices, getTeamMembers, getBookingByPaymentIntent } from '@/components/booking/api'
 import PaymentWidget from '@/components/payment/PaymentWidget'
@@ -46,7 +47,7 @@ const initialFormValues = {
   additionalNotes: undefined
 } as FormValues
 
-interface AppointmentBookingFormMobileProps {
+interface AppointmentBookingFormProps {
   tenantId?: string;
   apiUrl?: string;
   onBookingComplete?: (bookingData: any) => void;
@@ -60,7 +61,7 @@ interface ResultState {
   description?: string;
 }
 
-const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> = ({
+const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormProps> = ({
   tenantId = 'default',
   apiUrl,
   onBookingComplete,
@@ -92,13 +93,13 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
     // Ensure summary content is derived immediately for display
     try {
       computeAndSetSummaryFormValues();
-    } catch {}
+    } catch { }
     setResultState({
       show: true,
       status: 'success',
-      title: 'Payment successful',
-      description: 'Your payment was confirmed. Your appointment will reflect as paid.'
-    });
+      title: 'Thank you!',
+      description: 'Your appointment has been confirmed and a confirmation email has been sent to you.'
+    })
     setBookingSuccessful(true);
   }
 
@@ -143,7 +144,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
       const url = new URL(window.location.href);
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const utm: Record<string, string> = {};
-      ['utm_source','utm_medium','utm_campaign','utm_term','utm_content'].forEach((k) => {
+      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach((k) => {
         const v = url.searchParams.get(k);
         if (v) utm[k] = v;
       });
@@ -182,20 +183,19 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
   const steps = [
     {
       title: 'Select Services',
-      content:
-        servicesData && employeesData ? (
-          <ServiceStepMobile
-            formRef={forms.serviceForm}
-            setFormValues={setFormValues}
-            bookingValues={bookingValues}
-            setBookingValues={setBookingValues}
-            employeesData={employeesData}
-            servicesData={servicesData}
-            tenantId={tenantId}
-          />
-        ) : (
-          <ServicesStepSkeletonMobile />
-        )
+      content: servicesData && employeesData ? (
+        <ServiceStepMobile
+          formRef={forms.serviceForm}
+          setFormValues={setFormValues}
+          bookingValues={bookingValues}
+          setBookingValues={setBookingValues}
+          employeesData={employeesData}
+          servicesData={servicesData}
+          tenantId={tenantId}
+        />
+      ) : (
+        <ServicesStepSkeleton />
+      )
     },
     {
       title: 'Personal Information',
@@ -209,49 +209,127 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
       )
     },
     {
-      title: 'Payment Options',
+      title: 'Review',
       content: (
-        <div style={{ display: 'grid', gap: 12 }}>
-          <p style={{ marginBottom: 8 }}>Choose how you'd like to proceed:</p>
-          <Radio.Group
-            value={paymentChoice}
-            onChange={(e) => setPaymentChoice(e.target.value)}
-            optionType="button"
-            buttonStyle="solid"
-          >
-            <Radio.Button value="pay_now">Pay now</Radio.Button>
-            <Radio.Button value="pay_later">Pay later</Radio.Button>
-          </Radio.Group>
-          {!paymentChoice && (
-            <div style={{ fontSize: 12, color: '#999' }}>
-              You can continue after selecting one of the options.
-            </div>
-          )}
+        <div>
+          <Typography.Title level={4} style={{ marginBottom: 16, color: '#262626', textAlign: 'center' }}>
+            Please review your appointment details
+          </Typography.Title>
+          <SummaryStepMobile formValues={formValues} />
         </div>
       )
     },
     {
       title: 'Payment',
       content: (
-        <div style={{ display: 'grid', gap: 12 }}>
-          {paymentChoice !== 'pay_now' ? (
-            <div style={{ color: '#666' }}>
-              Please go back and choose "Pay now", or select "Pay later" to finish without payment.
-            </div>
-          ) : !createdBookingId ? (
-            <div>Preparing payment…</div>
-          ) : (
-            <PaymentWidget
-              tenantId={tenantId}
-              bookingId={createdBookingId!}
-              apiBaseUrl={apiUrl}
-              email={customerValues.Email || undefined}
-              name={customerValues.FullName || undefined}
-              onPaymentSuccess={handlePaymentSuccess}
-              onPaymentFailure={(err: Error) => {
-                console.error('Payment failed:', err);
+        <div>
+          {/* Payment Options */}
+          <Typography.Title level={5} style={{ marginBottom: 12, color: '#262626' }}>
+            Choose how you'd like to proceed:
+          </Typography.Title>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+            <Card
+              hoverable
+              size="small"
+              style={{
+                textAlign: 'center',
+                cursor: 'pointer',
+                border: paymentChoice === 'pay_later' ? '2px solid #1890ff' : '1px solid #d9d9d9',
+                backgroundColor: paymentChoice === 'pay_later' ? '#f0f8ff' : '#fff'
               }}
-            />
+              onClick={() => {
+                setPaymentChoice('pay_later');
+                setCreatedBookingId(null);
+              }}
+              bodyStyle={{ padding: '16px 12px' }}
+            >
+              <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                <ClockCircleOutlined style={{ fontSize: 32, color: '#595959' }} />
+                <Typography.Text strong style={{ fontSize: 14 }}>
+                  Pay later
+                </Typography.Text>
+              </Space>
+            </Card>
+
+            <Card
+              hoverable
+              size="small"
+              style={{
+                textAlign: 'center',
+                cursor: 'pointer',
+                border: paymentChoice === 'pay_now' ? '2px solid #1890ff' : '1px solid #d9d9d9',
+                backgroundColor: paymentChoice === 'pay_now' ? '#f0f8ff' : '#fff'
+              }}
+              onClick={async () => {
+                setPaymentChoice('pay_now');
+                if (!createdBookingId) {
+                  try {
+                    setSubmitting(true);
+                    const booking = buildBookingPayload();
+                    const createResp = await createAppointment(
+                      { ...booking, metadata: buildWidgetMetadata() },
+                      tenantId,
+                      apiUrl
+                    );
+                    const newId = createResp?.id ?? createResp?.data?.id ?? createResp?.booking?.id ?? createResp?.data?.booking?.id;
+                    if (!newId) {
+                      throw new Error('Could not determine bookingId from createAppointment response');
+                    }
+                    setCreatedBookingId(String(newId));
+                  } catch (err) {
+                    console.error('Error preparing payment:', err);
+                    setPaymentChoice(null);
+                  } finally {
+                    setSubmitting(false);
+                  }
+                }
+              }}
+              bodyStyle={{ padding: '16px 12px' }}
+            >
+              <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                <CreditCardOutlined style={{ fontSize: 32, color: '#595959' }} />
+                <Typography.Text strong style={{ fontSize: 14 }}>
+                  Pay now
+                </Typography.Text>
+              </Space>
+            </Card>
+          </div>
+
+          {/* Payment Widget - only show if pay_now is selected and booking is created */}
+          {paymentChoice === 'pay_now' && createdBookingId && (
+            <div style={{
+              border: '1px solid #f0f0f0',
+              borderRadius: 8,
+              padding: '16px',
+              backgroundColor: '#fafafa',
+              marginTop: 16
+            }}>
+              <PaymentWidget
+                tenantId={tenantId}
+                bookingId={createdBookingId}
+                apiBaseUrl={apiUrl}
+                email={customerValues.Email || undefined}
+                name={customerValues.FullName || undefined}
+                onPaymentSuccess={handlePaymentSuccess}
+                onPaymentFailure={(err: Error) => {
+                  console.error('Payment failed:', err);
+                }}
+              />
+            </div>
+          )}
+
+          {/* Show loading when preparing payment */}
+          {paymentChoice === 'pay_now' && !createdBookingId && submitting && (
+            <div style={{
+              textAlign: 'center',
+              padding: '20px',
+              color: '#595959',
+              fontSize: 14,
+              marginTop: 16
+            }}>
+              Preparing payment...
+            </div>
           )}
         </div>
       )
@@ -276,8 +354,8 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
       }
     }
 
-    // Payment Options step index = 2
-    if (current === 2) {
+    // Payment step index = 3 (now that Review is step 2)
+    if (current === 3) {
       if (!paymentChoice) return;
 
       if (paymentChoice === 'pay_later') {
@@ -286,34 +364,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
         return;
       }
 
-      // pay_now: ensure booking exists to obtain bookingId, then go to Payment step
-      try {
-        setSubmitting(true)
-
-        const booking = buildBookingPayload()
-        const createResp = await createAppointment(
-          { ...booking, metadata: buildWidgetMetadata() },
-          tenantId,
-          apiUrl
-        )
-        const newId =
-          (createResp?.id ?? createResp?.data?.id ?? createResp?.booking?.id ?? createResp?.data?.booking?.id)
-        if (!newId) {
-          throw new Error('Could not determine bookingId from createAppointment response')
-        }
-        setCreatedBookingId(String(newId))
-        setCurrent(current + 1)
-      } catch (err) {
-        console.error('Error preparing payment:', err)
-        setResultState({
-          show: true,
-          status: 'error',
-          title: 'Could not start payment',
-          description: 'We were unable to prepare the payment step. Please try again or choose Pay later.'
-        })
-      } finally {
-        setSubmitting(false)
-      }
+      // For pay_now, the widget should already be loaded and handle payment
       return;
     }
 
@@ -326,7 +377,6 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
   const prev = () => {
     setCurrent(current - 1)
   }
-
 
   const onSubmit = async () => {
     try {
@@ -376,8 +426,8 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
       setResultState({
         show: true,
         status: 'success',
-        title: 'Appointment Booked Successfully!',
-        description: 'Your appointment has been confirmed. You will receive a confirmation email shortly.'
+        title: 'Thank you!',
+        description: 'Your appointment has been confirmed and a confirmation email has been sent to you.'
       })
 
       setBookingSuccessful(true)
@@ -430,7 +480,6 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
       setSubmitting(false)
     }
   }
-
 
   const onReset = async () => {
     setServicesData(undefined)
@@ -502,8 +551,8 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
               b.userId != null
                 ? String(b.userId)
                 : (b.employeeId != null
-                    ? String(b.employeeId)
-                    : (metaForm.employeeId != null ? String(metaForm.employeeId) : undefined));
+                  ? String(b.employeeId)
+                  : (metaForm.employeeId != null ? String(metaForm.employeeId) : undefined));
 
             const resolvedDateStr = b.date ?? metaForm.date;
             const resolvedTime = b.time ?? metaForm.time;
@@ -543,7 +592,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
 
             // Ensure summary is recomputed after state updates (and once services/employees load it will refine)
             setTimeout(() => {
-              try { computeAndSetSummaryFormValues(); } catch {}
+              try { computeAndSetSummaryFormValues(); } catch { }
             }, 0);
 
             setCurrent(3); // Jump directly to Payment step
@@ -559,77 +608,14 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
               cleanUrl.searchParams.delete(k)
             );
             window.history.replaceState({}, document.title, cleanUrl.toString());
-          } catch {}
+          } catch { }
         }
       })();
-    } catch {}
+    } catch { }
   }, [tenantId, apiUrl, rehydrated])
 
-// Compute and set summary form values based on current state + reference data
-function computeAndSetSummaryFormValues() {
-  const next: Partial<FormValues> = {};
-
-  try {
-    // Service name + price from servicesData
-    if (servicesData && bookingValues.serviceId) {
-      const svc = servicesData.find(s => String(s.id) === String(bookingValues.serviceId));
-      if (svc) {
-        next.service = svc.name;
-        next.price = String(svc.price);
-      }
-    }
-
-    // Employee name from employeesData
-    if (employeesData && bookingValues.employeeId) {
-      const emp = employeesData.find(e => String(e.id) === String(bookingValues.employeeId));
-      if (emp) {
-        next.employee = emp.name;
-      }
-    }
-
-    // Date formatting (human-friendly)
-    if (bookingValues.date) {
-      next.date = bookingValues.date.format('MMMM DD, YYYY');
-    }
-
-    // Time formatting:
-    // - If ISO datetime → HH:mm
-    // - If HH:mm:ss → HH:mm
-    // - If already a label (e.g., "08:00 - 08:30") keep as-is
-    if (bookingValues.time) {
-      const t = bookingValues.time as string;
-      let displayTime = t;
-
-      if (t.includes(' - ')) {
-        displayTime = t;
-      } else if (t.includes('T')) {
-        const d = dayjs(t);
-        if (d.isValid()) displayTime = d.format('HH:mm');
-      } else if (/^\\d{2}:\\d{2}:\\d{2}$/.test(t)) {
-        displayTime = t.slice(0, 5);
-      }
-
-      next.time = displayTime;
-    }
-
-    // Customer info (from customerValues)
-    next.fullName = customerValues.FullName || next.fullName;
-    next.email = customerValues.Email || next.email;
-    next.phoneNumber = customerValues.Phone || next.phoneNumber;
-  } catch {
-    // ignore
-  }
-
-  setFormValues(prev => ({ ...prev, ...next }));
-}
-
-// Keep summary derived when dependencies change (rehydration, data fetch, edits)
-useEffect(() => {
-  computeAndSetSummaryFormValues();
-}, [servicesData, employeesData, bookingValues, customerValues]);
-  // Derive Summary fields (service name, price, employee name, formatted date/time, customer info)
-  // once bookingValues/customerValues and reference data are available.
-  useEffect(() => {
+  // Compute and set summary form values based on current state + reference data
+  function computeAndSetSummaryFormValues() {
     const next: Partial<FormValues> = {};
 
     try {
@@ -650,42 +636,46 @@ useEffect(() => {
         }
       }
 
-      // Date formatting for display
+      // Date formatting (human-friendly)
       if (bookingValues.date) {
         next.date = bookingValues.date.format('MMMM DD, YYYY');
       }
 
-      // Time formatting for display:
-      // - If it's an ISO datetime, format to HH:mm
-      // - If it's HH:mm:ss, trim to HH:mm
-      // - If it's already a human label (e.g., "08:00 - 08:30"), leave it
+      // Time formatting:
+      // - If ISO datetime → HH:mm
+      // - If HH:mm:ss → HH:mm
+      // - If already a label (e.g., "08:00 - 08:30") keep as-is
       if (bookingValues.time) {
         const t = bookingValues.time as string;
         let displayTime = t;
 
         if (t.includes(' - ')) {
-          // keep label as-is
           displayTime = t;
         } else if (t.includes('T')) {
           const d = dayjs(t);
           if (d.isValid()) displayTime = d.format('HH:mm');
-        } else if (/^\d{2}:\d{2}:\d{2}$/.test(t)) {
+        } else if (/^\\d{2}:\\d{2}:\\d{2}$/.test(t)) {
           displayTime = t.slice(0, 5);
         }
 
         next.time = displayTime;
       }
 
-      // Customer info
+      // Customer info (from customerValues)
       next.fullName = customerValues.FullName || next.fullName;
       next.email = customerValues.Email || next.email;
       next.phoneNumber = customerValues.Phone || next.phoneNumber;
     } catch {
-      // noop
+      // ignore
     }
 
     setFormValues(prev => ({ ...prev, ...next }));
-  }, [servicesData, employeesData, bookingValues, customerValues])
+  }
+
+  // Keep summary derived when dependencies change (rehydration, data fetch, edits)
+  useEffect(() => {
+    computeAndSetSummaryFormValues();
+  }, [servicesData, employeesData, bookingValues, customerValues]);
 
   return (
     <>
@@ -764,11 +754,52 @@ useEffect(() => {
           </>
         ) : (
           <>
-            <Steps current={current} style={{ marginBottom: 24 }}>
-              {steps.map((item) => (
-                <Step key={item.title} title={item.title} />
-              ))}
-            </Steps>
+            <Steps
+              current={current < steps.length - 1 ? 0 : 0} // Current step is always position 0 in our filtered view
+              type="navigation"
+              size="small"
+              style={{ marginBottom: 24 }}
+              items={[
+                // Current step
+                {
+                  title: steps[current].title,
+                  status: 'process',
+                  icon: <div style={{
+                    backgroundColor: '#1890ff',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: 24,
+                    height: 24,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 12,
+                    fontWeight: 'bold'
+                  }}>
+                    {current + 1}
+                  </div>
+                },
+                // Next step (if exists)
+                ...(current < steps.length - 1 ? [{
+                  title: steps[current + 1].title,
+                  status: 'wait' as const,
+                  icon: <div style={{
+                    backgroundColor: '#d9d9d9',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: 24,
+                    height: 24,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 12,
+                    fontWeight: 'bold'
+                  }}>
+                    {current + 2}
+                  </div>
+                }] : [])
+              ]}
+            />
 
             <div className='steps-content'>
               {steps[current].content}
@@ -777,7 +808,12 @@ useEffect(() => {
             <div className='steps-action' style={{ marginTop: 16 }}>
               <Row gutter={[16, 16]}>
                 {current > 0 && (
-                  <Col xs={24} sm={current === 3 ? 24 : 12}>
+                  <Col xs={24} sm={
+                    current === 3 && paymentChoice === 'pay_now' ? 24 : // Full width when pay_now
+                      current === 3 && paymentChoice === 'pay_later' ? 12 : // Half width when pay_later  
+                        current === 3 ? 24 : // Full width when no selection
+                          12 // Half width for other steps
+                  }>
                     <Button
                       block
                       size='middle'
@@ -797,7 +833,20 @@ useEffect(() => {
                       onClick={() => next()}
                       disabled={loading || submitting}
                     >
-                      {current === steps.length - 1 ? 'Submit' : 'Next'}
+                      Next
+                    </Button>
+                  </Col>
+                )}
+                {current === 3 && paymentChoice === 'pay_later' && (
+                  <Col xs={24} sm={12}>
+                    <Button
+                      type='primary'
+                      block
+                      size='middle'
+                      onClick={() => next()}
+                      disabled={loading || submitting}
+                    >
+                      Confirm
                     </Button>
                   </Col>
                 )}
