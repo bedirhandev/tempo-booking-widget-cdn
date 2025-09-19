@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
+import { CheckCircleOutlined, CheckOutlined, LoadingOutlined } from '@ant-design/icons';
+import { Button } from 'antd';
 
 export type PaymentFormProps = {
   clientSecret: string;
@@ -83,39 +85,155 @@ export default function PaymentForm({
     }
   };
 
+  const handleButtonClick = () => {
+    // Trigger form submission programmatically
+    const form = document.getElementById('payment-form') as HTMLFormElement;
+    if (form) {
+      form.requestSubmit();
+    }
+  };
+
   if (succeeded) {
     return (
-      <div role="status" aria-live="polite" style={{ fontSize: 14, color: '#333' }}>
-        Payment successful
+      <div style={{
+        textAlign: 'center',
+        padding: '32px 24px',
+        backgroundColor: '#f6ffed',
+        border: '1px solid #b7eb8f',
+        borderRadius: 12
+      }}>
+        <CheckCircleOutlined style={{ 
+          fontSize: 48, 
+          color: '#52c41a',
+          marginBottom: 16
+        }} />
+        <h3 style={{ 
+          color: '#52c41a', 
+          marginBottom: 8,
+          fontSize: 18,
+          fontWeight: 600
+        }}>
+          Payment Successful!
+        </h3>
+        <p style={{ 
+          color: '#595959', 
+          margin: 0,
+          fontSize: 14
+        }}>
+          Your booking has been confirmed. You'll receive a confirmation email shortly.
+        </p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
-      <div style={{ fontWeight: 500 }}>Pay {formatAmount(amount, currency)}</div>
-      <PaymentElement />
-      <button
-        type="submit"
-        disabled={submitting || !stripe || !elements}
-        style={{
-          padding: '10px 14px',
-          background: submitting ? '#999' : '#1677ff',
-          color: '#fff',
-          borderRadius: 6,
-          border: 'none',
-          cursor: submitting ? 'not-allowed' : 'pointer',
-          fontWeight: 600,
-        }}
-      >
-        {submitting ? 'Processing your payment…' : 'Pay now'}
-      </button>
-
-      {message && (
-        <div role="status" aria-live="polite" style={{ fontSize: 14, color: '#333' }}>
-          {message}
+    <div style={{ display: 'grid', gap: 20 }}>
+      {/* Payment Summary */}
+      <div style={{
+        padding: '16px 20px',
+        backgroundColor: '#fafafa',
+        border: '1px solid #f0f0f0',
+        borderRadius: 8
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ color: '#8c8c8c', fontSize: 14, fontWeight: 500 }}>
+            Total Amount
+          </span>
+          <span style={{ 
+            fontSize: 20, 
+            fontWeight: 600, 
+            color: '#262626'
+          }}>
+            {formatAmount(amount, currency)}
+          </span>
         </div>
-      )}
-    </form>
+      </div>
+
+      <form id="payment-form" onSubmit={handleSubmit} style={{ display: 'grid', gap: 20 }}>
+        {/* Payment Method Section */}
+        <div>
+          <h4 style={{ 
+            marginBottom: 16, 
+            color: '#262626', 
+            fontSize: 16,
+            fontWeight: 600
+          }}>
+            Payment Details
+          </h4>
+          
+          <PaymentElement 
+            options={{
+              layout: 'tabs',
+            }}
+          />
+        </div>
+
+        {/* Security Notice */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '12px 16px',
+          backgroundColor: '#f0f9f0',
+          border: '1px solid #d9f7be',
+          borderRadius: 6,
+          fontSize: 13,
+          color: '#389e0d'
+        }}>
+          <CheckOutlined />
+          <span>Your payment information is encrypted and secure</span>
+        </div>
+
+        {/* Submit Button */}
+        <Button
+          type="primary"
+          size="large"
+          block
+          loading={submitting}
+          disabled={!stripe || !elements}
+          onClick={handleButtonClick}
+          style={{
+            height: 48,
+            fontSize: 16,
+            fontWeight: 600
+          }}
+          icon={submitting ? <LoadingOutlined /> : undefined}
+        >
+          {submitting ? 'Processing Payment...' : `Complete Payment • ${formatAmount(amount, currency)}`}
+        </Button>
+
+        {/* Status Message */}
+        {message && (
+          <div 
+            role="status" 
+            aria-live="polite" 
+            style={{ 
+              padding: '12px 16px',
+              borderRadius: 6,
+              fontSize: 14,
+              backgroundColor: message.includes('successful') ? '#f6ffed' : '#fff2e8',
+              border: message.includes('successful') ? '1px solid #b7eb8f' : '1px solid #ffbb96',
+              color: message.includes('successful') ? '#52c41a' : '#fa541c'
+            }}
+          >
+            {message}
+          </div>
+        )}
+
+        {/* Trust Indicators */}
+        <div style={{
+          textAlign: 'center',
+          fontSize: 12,
+          color: '#8c8c8c',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8
+        }}>
+          <span>🔒</span>
+          <span>Secured by Stripe • SSL Encrypted</span>
+        </div>
+      </form>
+    </div>
   );
 }
