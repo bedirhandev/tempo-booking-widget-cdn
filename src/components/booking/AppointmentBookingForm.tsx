@@ -89,6 +89,10 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
 
   // Declare before steps to avoid "used before declaration"
   function handlePaymentSuccess(bookingId: string) {
+    // Ensure summary content is derived immediately for display
+    try {
+      computeAndSetSummaryFormValues();
+    } catch {}
     setResultState({
       show: true,
       status: 'success',
@@ -485,45 +489,63 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
             const bId = String(b.id ?? '');
             if (bId) setCreatedBookingId(bId);
 
+            // Prefer booking payload, but fall back to widget_metadata.form if fields are missing
+            const widgetMeta = b.widget_metadata ?? b.widgetMetadata ?? b.metadata ?? null;
+            const metaForm = widgetMeta?.form ?? {};
+
+            const resolvedServiceId =
+              b.serviceId != null
+                ? String(b.serviceId)
+                : (metaForm.serviceId != null ? String(metaForm.serviceId) : undefined);
+
+            const resolvedEmployeeId =
+              b.userId != null
+                ? String(b.userId)
+                : (b.employeeId != null
+                    ? String(b.employeeId)
+                    : (metaForm.employeeId != null ? String(metaForm.employeeId) : undefined));
+
+            const resolvedDateStr = b.date ?? metaForm.date;
+            const resolvedTime = b.time ?? metaForm.time;
+
             setBookingValues(prev => ({
               ...prev,
-              serviceId: b.serviceId != null ? String(b.serviceId) : prev.serviceId,
-              employeeId: b.userId != null
-                ? String(b.userId)
-                : (b.employeeId != null ? String(b.employeeId) : prev.employeeId),
+              serviceId: resolvedServiceId ?? prev.serviceId,
+              employeeId: resolvedEmployeeId ?? prev.employeeId,
               note: b.note ?? prev.note,
-              notificationEnabled: typeof b.notificationEnabled === 'boolean'
-                ? b.notificationEnabled
-                : prev.notificationEnabled,
-              date: b.date ? dayjs(b.date) : prev.date,
-              time: b.time ?? prev.time,
+              notificationEnabled:
+                typeof b.notificationEnabled === 'boolean' ? b.notificationEnabled : prev.notificationEnabled,
+              date: resolvedDateStr ? dayjs(resolvedDateStr) : prev.date,
+              time: resolvedTime ?? prev.time,
             }));
 
-            const cust = b.customer ?? {};
+            const custSrc = b.customer ?? metaForm.customer ?? {};
             setCustomerValues(prev => ({
               ...prev,
-              id: cust.id != null ? String(cust.id) : prev.id,
-              FullName: cust.fullName ?? cust.FullName ?? prev.FullName,
-              Email: cust.email ?? prev.Email,
-              Phone: cust.phone ?? prev.Phone,
-              Notes: cust.notes ?? prev.Notes,
-              isRegistered: typeof cust.isRegistered === 'boolean' ? cust.isRegistered : prev.isRegistered,
+              id: custSrc.id != null ? String(custSrc.id) : prev.id,
+              FullName: custSrc.fullName ?? custSrc.FullName ?? prev.FullName,
+              Email: custSrc.email ?? prev.Email,
+              Phone: custSrc.phone ?? prev.Phone,
+              Notes: custSrc.notes ?? prev.Notes,
+              isRegistered:
+                typeof custSrc.isRegistered === 'boolean' ? custSrc.isRegistered : prev.isRegistered,
             }));
 
+            // Only set customer display fields here; summary (service/price/date/time/employee) is derived.
             setFormValues(prev => ({
               ...prev,
-              fullName: cust.fullName ?? prev.fullName,
-              email: cust.email ?? prev.email,
-              phoneNumber: cust.phone ?? prev.phoneNumber,
-              service: b.serviceId != null ? String(b.serviceId) : prev.service,
-              employee: b.userId != null
-                ? String(b.userId)
-                : (b.employeeId != null ? String(b.employeeId) : prev.employee),
-              date: b.date ?? prev.date,
-              time: b.time ?? prev.time,
+              fullName: custSrc.fullName ?? prev.fullName,
+              email: custSrc.email ?? prev.email,
+              phoneNumber: custSrc.phone ?? prev.phoneNumber,
             }));
 
             setPaymentChoice('pay_now');
+
+            // Ensure summary is recomputed after state updates (and once services/employees load it will refine)
+            setTimeout(() => {
+              try { computeAndSetSummaryFormValues(); } catch {}
+            }, 0);
+
             setCurrent(3); // Jump directly to Payment step
           }
         } catch (e) {
@@ -542,6 +564,128 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
       })();
     } catch {}
   }, [tenantId, apiUrl, rehydrated])
+
+// Compute and set summary form values based on current state + reference data
+function computeAndSetSummaryFormValues() {
+  const next: Partial<FormValues> = {};
+
+  try {
+    // Service name + price from servicesData
+    if (servicesData && bookingValues.serviceId) {
+      const svc = servicesData.find(s => String(s.id) === String(bookingValues.serviceId));
+      if (svc) {
+        next.service = svc.name;
+        next.price = String(svc.price);
+      }
+    }
+
+    // Employee name from employeesData
+    if (employeesData && bookingValues.employeeId) {
+      const emp = employeesData.find(e => String(e.id) === String(bookingValues.employeeId));
+      if (emp) {
+        next.employee = emp.name;
+      }
+    }
+
+    // Date formatting (human-friendly)
+    if (bookingValues.date) {
+      next.date = bookingValues.date.format('MMMM DD, YYYY');
+    }
+
+    // Time formatting:
+    // - If ISO datetime → HH:mm
+    // - If HH:mm:ss → HH:mm
+    // - If already a label (e.g., "08:00 - 08:30") keep as-is
+    if (bookingValues.time) {
+      const t = bookingValues.time as string;
+      let displayTime = t;
+
+      if (t.includes(' - ')) {
+        displayTime = t;
+      } else if (t.includes('T')) {
+        const d = dayjs(t);
+        if (d.isValid()) displayTime = d.format('HH:mm');
+      } else if (/^\\d{2}:\\d{2}:\\d{2}$/.test(t)) {
+        displayTime = t.slice(0, 5);
+      }
+
+      next.time = displayTime;
+    }
+
+    // Customer info (from customerValues)
+    next.fullName = customerValues.FullName || next.fullName;
+    next.email = customerValues.Email || next.email;
+    next.phoneNumber = customerValues.Phone || next.phoneNumber;
+  } catch {
+    // ignore
+  }
+
+  setFormValues(prev => ({ ...prev, ...next }));
+}
+
+// Keep summary derived when dependencies change (rehydration, data fetch, edits)
+useEffect(() => {
+  computeAndSetSummaryFormValues();
+}, [servicesData, employeesData, bookingValues, customerValues]);
+  // Derive Summary fields (service name, price, employee name, formatted date/time, customer info)
+  // once bookingValues/customerValues and reference data are available.
+  useEffect(() => {
+    const next: Partial<FormValues> = {};
+
+    try {
+      // Service name + price from servicesData
+      if (servicesData && bookingValues.serviceId) {
+        const svc = servicesData.find(s => String(s.id) === String(bookingValues.serviceId));
+        if (svc) {
+          next.service = svc.name;
+          next.price = String(svc.price);
+        }
+      }
+
+      // Employee name from employeesData
+      if (employeesData && bookingValues.employeeId) {
+        const emp = employeesData.find(e => String(e.id) === String(bookingValues.employeeId));
+        if (emp) {
+          next.employee = emp.name;
+        }
+      }
+
+      // Date formatting for display
+      if (bookingValues.date) {
+        next.date = bookingValues.date.format('MMMM DD, YYYY');
+      }
+
+      // Time formatting for display:
+      // - If it's an ISO datetime, format to HH:mm
+      // - If it's HH:mm:ss, trim to HH:mm
+      // - If it's already a human label (e.g., "08:00 - 08:30"), leave it
+      if (bookingValues.time) {
+        const t = bookingValues.time as string;
+        let displayTime = t;
+
+        if (t.includes(' - ')) {
+          // keep label as-is
+          displayTime = t;
+        } else if (t.includes('T')) {
+          const d = dayjs(t);
+          if (d.isValid()) displayTime = d.format('HH:mm');
+        } else if (/^\d{2}:\d{2}:\d{2}$/.test(t)) {
+          displayTime = t.slice(0, 5);
+        }
+
+        next.time = displayTime;
+      }
+
+      // Customer info
+      next.fullName = customerValues.FullName || next.fullName;
+      next.email = customerValues.Email || next.email;
+      next.phoneNumber = customerValues.Phone || next.phoneNumber;
+    } catch {
+      // noop
+    }
+
+    setFormValues(prev => ({ ...prev, ...next }));
+  }, [servicesData, employeesData, bookingValues, customerValues])
 
   return (
     <>
