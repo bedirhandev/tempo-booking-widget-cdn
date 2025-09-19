@@ -97,9 +97,9 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
     setResultState({
       show: true,
       status: 'success',
-      title: 'Payment successful',
-      description: 'Your payment was confirmed. Your appointment will reflect as paid.'
-    });
+      title: 'Thank you!',
+      description: 'Your appointment has been confirmed and a confirmation email has been sent to you.'
+    })
     setBookingSuccessful(true);
   }
 
@@ -183,20 +183,19 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
   const steps = [
     {
       title: 'Select Services',
-      content:
-        servicesData && employeesData ? (
-          <ServiceStep
-            formRef={forms.serviceForm}
-            setFormValues={setFormValues}
-            bookingValues={bookingValues}
-            setBookingValues={setBookingValues}
-            employeesData={employeesData}
-            servicesData={servicesData}
-            tenantId={tenantId}
-          />
-        ) : (
-          <ServicesStepSkeleton />
-        )
+      content: servicesData && employeesData ? (
+        <ServiceStep
+          formRef={forms.serviceForm}
+          setFormValues={setFormValues}
+          bookingValues={bookingValues}
+          setBookingValues={setBookingValues}
+          employeesData={employeesData}
+          servicesData={servicesData}
+          tenantId={tenantId}
+        />
+      ) : (
+        <ServicesStepSkeleton />
+      )
     },
     {
       title: 'Personal Information',
@@ -207,6 +206,17 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
           customerValues={customerValues}
           setCustomerValues={setCustomerValues}
         />
+      )
+    },
+    {
+      title: 'Review',
+      content: (
+        <div>
+          <Typography.Title level={4} style={{ marginBottom: 16, color: '#262626', textAlign: 'center' }}>
+            Please review your appointment details
+          </Typography.Title>
+          <SummaryStep formValues={formValues} />
+        </div>
       )
     },
     {
@@ -344,8 +354,8 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
       }
     }
 
-    // Payment step index = 2
-    if (current === 2) {
+    // Payment step index = 3 (now that Review is step 2)
+    if (current === 3) {
       if (!paymentChoice) return;
 
       if (paymentChoice === 'pay_later') {
@@ -416,8 +426,8 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
       setResultState({
         show: true,
         status: 'success',
-        title: 'Appointment Booked Successfully!',
-        description: 'Your appointment has been confirmed. You will receive a confirmation email shortly.'
+        title: 'Thank you!',
+        description: 'Your appointment has been confirmed and a confirmation email has been sent to you.'
       })
 
       setBookingSuccessful(true)
@@ -585,7 +595,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
               try { computeAndSetSummaryFormValues(); } catch { }
             }, 0);
 
-            setCurrent(2); // Jump directly to Payment step
+            setCurrent(3); // Jump directly to Payment step
           }
         } catch (e) {
           console.error('Failed to restore booking from PaymentIntent:', e);
@@ -799,9 +809,9 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
               <Row gutter={[16, 16]}>
                 {current > 0 && (
                   <Col xs={24} sm={
-                    current === 2 && paymentChoice === 'pay_now' ? 24 : // Full width when pay_now
-                      current === 2 && paymentChoice === 'pay_later' ? 12 : // Half width when pay_later  
-                        current === 2 ? 24 : // Full width when no selection
+                    current === 3 && paymentChoice === 'pay_now' ? 24 : // Full width when pay_now
+                      current === 3 && paymentChoice === 'pay_later' ? 12 : // Half width when pay_later  
+                        current === 3 ? 24 : // Full width when no selection
                           12 // Half width for other steps
                   }>
                     <Button
@@ -814,7 +824,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
                     </Button>
                   </Col>
                 )}
-                {current !== 2 && (
+                {current !== 3 && (
                   <Col xs={24} sm={current > 0 ? 12 : 24}>
                     <Button
                       type='primary'
@@ -827,7 +837,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
                     </Button>
                   </Col>
                 )}
-                {current === 2 && paymentChoice === 'pay_later' && (
+                {current === 3 && paymentChoice === 'pay_later' && (
                   <Col xs={24} sm={12}>
                     <Button
                       type='primary'
@@ -836,7 +846,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
                       onClick={() => next()}
                       disabled={loading || submitting}
                     >
-                      Next
+                      Confirm
                     </Button>
                   </Col>
                 )}

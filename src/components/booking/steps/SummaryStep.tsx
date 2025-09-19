@@ -15,9 +15,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ formValues }) => {
     <Descriptions
       bordered
       column={1}
-
       size={screens.xs ? 'small' : 'middle'}
-      title='Appointment Summary'
       layout={screens.xs ? 'vertical' : 'horizontal'}
       labelStyle={{
         textAlign: screens.xs ? 'center' : 'right'
