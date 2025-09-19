@@ -4,13 +4,7 @@ import { Form } from 'antd';
 import { CheckList, Popup } from 'antd-mobile';
 import { ClockCircleOutline, CloseCircleFill } from 'antd-mobile-icons';
 import type { CheckListValue } from 'antd-mobile/es/components/check-list';
-import dayjs from 'dayjs';
-
-interface AvailableTime {
-  time: string;
-  disabled: boolean;
-  injected?: boolean;
-}
+import type { AvailableTime } from '@/components/booking/types/index'; // <-- use your shared type
 
 interface TimeSelectorMobileProps {
   name?: string;
@@ -18,40 +12,29 @@ interface TimeSelectorMobileProps {
   placeholder?: string;
   required?: boolean;
   requiredMessage?: string;
-  availableTimes: AvailableTime[];
-  serviceDuration?: number;
+  availableTimes: AvailableTime[]; // includes business_datetime_start, time, disabled, injected?
   allowClear?: boolean;
   style?: React.CSSProperties;
 }
 
 interface TimeInputProps {
-  value?: string;
+  value?: string; // business_datetime_start
   onChange?: (value: string | undefined) => void;
   placeholder?: string;
   availableTimes: AvailableTime[];
-  serviceDuration?: number;
   allowClear?: boolean;
   style?: React.CSSProperties;
 }
 
 const TimeInput = forwardRef<any, TimeInputProps>(
-  ({ 
-    value, 
-    onChange, 
-    placeholder, 
-    availableTimes,
-    serviceDuration = 0,
-    allowClear,
-    style 
-  }, ref) => {
+  ({ value, onChange, placeholder, availableTimes, allowClear, style }, ref) => {
     const [visible, setVisible] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
     const [tempValue, setTempValue] = useState<CheckListValue[]>([]);
 
-    // Filter enabled times
-    const enabledTimes = useMemo(() => 
-      availableTimes.filter(t => !t.disabled),
+    const enabledTimes = useMemo(
+      () => availableTimes.filter(t => !t.disabled),
       [availableTimes]
     );
 
@@ -90,28 +73,14 @@ const TimeInput = forwardRef<any, TimeInputProps>(
       setTempValue(value ? [value] : []);
     };
 
-    // Get display text for a time
-    const getTimeDisplay = (time: string, injected?: boolean) => {
-      const startTimeMoment = dayjs(time, 'HH:mm');
-      const endTimeMoment = startTimeMoment.add(serviceDuration, 'minute');
-      const timeDisplay = serviceDuration > 0 
-        ? `${time} - ${endTimeMoment.format('HH:mm')}`
-        : time;
+    const getLabel = (slot: AvailableTime) =>
+      slot.injected ? `${slot.time} (original)` : slot.time;
 
-      return injected 
-        ? `${timeDisplay} (original)` 
-        : timeDisplay;
-    };
-
-    // Get display text for selected value
     const displayText = useMemo(() => {
       if (!value) return null;
-      
-      const selectedTime = availableTimes.find(t => t.time === value);
-      if (!selectedTime) return value;
-
-      return getTimeDisplay(value, selectedTime.injected);
-    }, [value, availableTimes, serviceDuration]);
+      const slot = availableTimes.find(s => s.business_datetime_start === value);
+      return slot ? getLabel(slot) : placeholder ?? null;
+    }, [value, availableTimes, placeholder]);
 
     return (
       <>
@@ -146,19 +115,11 @@ const TimeInput = forwardRef<any, TimeInputProps>(
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             {allowClear && value && isHovered ? (
               <CloseCircleFill
-                style={{
-                  color: 'rgba(0, 0, 0, 0.25)',
-                  fontSize: 14,
-                }}
+                style={{ color: 'rgba(0, 0, 0, 0.25)', fontSize: 14 }}
                 onClick={handleClear}
               />
             ) : null}
-            <ClockCircleOutline
-              style={{
-                color: 'rgba(0, 0, 0, 0.25)',
-                fontSize: 14,
-              }}
-            />
+            <ClockCircleOutline style={{ color: 'rgba(0, 0, 0, 0.25)', fontSize: 14 }} />
           </div>
         </div>
 
@@ -188,9 +149,7 @@ const TimeInput = forwardRef<any, TimeInputProps>(
               >
                 Cancel
               </button>
-              <div style={{ fontSize: '16px', fontWeight: 500 }}>
-                Select Time
-              </div>
+              <div style={{ fontSize: '16px', fontWeight: 500 }}>Select Time</div>
               <button
                 onClick={handleConfirm}
                 style={{
@@ -207,30 +166,27 @@ const TimeInput = forwardRef<any, TimeInputProps>(
               </button>
             </div>
           </div>
-          
+
           <div style={{ overflowY: 'auto', maxHeight: 'calc(70vh - 60px)' }}>
             {enabledTimes.length > 0 ? (
               <CheckList
                 value={tempValue}
                 onChange={(val: CheckListValue[]) => {
-                  // For single selection, replace the array with the new selection
                   setTempValue(val.length > 0 ? [val[val.length - 1]] : []);
                 }}
                 style={{ '--border-top': 'none', '--border-bottom': 'none' } as any}
               >
-                {enabledTimes.map(({ time, injected }) => (
-                  <CheckList.Item key={time} value={time}>
-                    {getTimeDisplay(time, injected)}
+                {enabledTimes.map((slot) => (
+                  <CheckList.Item
+                    key={slot.business_datetime_start}
+                    value={slot.business_datetime_start} // store ISO in the form
+                  >
+                    {getLabel(slot)} {/* show localized label */}
                   </CheckList.Item>
                 ))}
               </CheckList>
             ) : (
-              <div style={{ 
-                padding: '40px 16px', 
-                textAlign: 'center', 
-                color: '#999',
-                fontSize: '14px'
-              }}>
+              <div style={{ padding: '40px 16px', textAlign: 'center', color: '#999', fontSize: '14px' }}>
                 No time slots available
               </div>
             )}
@@ -250,7 +206,6 @@ const TimeSelectorMobile: React.FC<TimeSelectorMobileProps> = ({
   required = true,
   requiredMessage = 'Please select a time',
   availableTimes,
-  serviceDuration = 0,
   allowClear = true,
   style,
 }) => {
@@ -263,12 +218,7 @@ const TimeSelectorMobile: React.FC<TimeSelectorMobileProps> = ({
       required={required}
       rules={
         required
-          ? [
-              {
-                required: true,
-                message: requiredMessage,
-              },
-            ]
+          ? [{ required: true, message: requiredMessage }]
           : undefined
       }
     >
@@ -278,14 +228,13 @@ const TimeSelectorMobile: React.FC<TimeSelectorMobileProps> = ({
             <span role="img" aria-label="warning" style={{ marginRight: 4 }}>
               ⚠️
             </span>
-            This booking was created with a time that does not match the current slot settings. 
+            This booking was created with a time that does not match the current slot settings.
             You can keep this time or select a new valid slot.
           </div>
         )}
         <TimeInput
           placeholder={placeholder}
           availableTimes={availableTimes}
-          serviceDuration={serviceDuration}
           allowClear={allowClear}
           style={style}
         />
