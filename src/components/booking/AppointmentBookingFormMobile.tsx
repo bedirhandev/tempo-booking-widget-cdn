@@ -13,6 +13,7 @@ import ServicesStepSkeleton from '@/components/booking/steps/ServiceStepSkeleton
 
 import { createAppointment, getServices, getTeamMembers, getBookingByPaymentIntent } from '@/components/booking/api'
 import PaymentWidget from '@/components/payment/PaymentWidget'
+import { useFinancialSettings } from '@/components/booking/financial/FinancialSettingsProvider'
 
 const { Step } = Steps
 
@@ -180,6 +181,9 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormProps> = ({
     }
   }
 
+  const { payLaterEnabled, stripeEnabled } = useFinancialSettings();
+  const showPaymentStep = payLaterEnabled || stripeEnabled;
+
   const steps = [
     {
       title: 'Select Services',
@@ -219,7 +223,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormProps> = ({
         </div>
       )
     },
-    {
+    ...(showPaymentStep ? [{
       title: 'Payment',
       content: (
         <div>
@@ -229,75 +233,79 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormProps> = ({
           </Typography.Title>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-            <Card
-              hoverable
-              size="small"
-              style={{
-                textAlign: 'center',
-                cursor: 'pointer',
-                border: paymentChoice === 'pay_later' ? '2px solid #1890ff' : '1px solid #d9d9d9',
-                backgroundColor: paymentChoice === 'pay_later' ? '#f0f8ff' : '#fff'
-              }}
-              onClick={() => {
-                setPaymentChoice('pay_later');
-                setCreatedBookingId(null);
-              }}
-              bodyStyle={{ padding: '16px 12px' }}
-            >
-              <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                <ClockCircleOutlined style={{ fontSize: 32, color: '#595959' }} />
-                <Typography.Text strong style={{ fontSize: 14 }}>
-                  Pay later
-                </Typography.Text>
-              </Space>
-            </Card>
+            {payLaterEnabled && (
+              <Card
+                hoverable
+                size="small"
+                style={{
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  border: paymentChoice === 'pay_later' ? '2px solid #1890ff' : '1px solid #d9d9d9',
+                  backgroundColor: paymentChoice === 'pay_later' ? '#f0f8ff' : '#fff'
+                }}
+                onClick={() => {
+                  setPaymentChoice('pay_later');
+                  setCreatedBookingId(null);
+                }}
+                bodyStyle={{ padding: '16px 12px' }}
+              >
+                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                  <ClockCircleOutlined style={{ fontSize: 32, color: '#595959' }} />
+                  <Typography.Text strong style={{ fontSize: 14 }}>
+                    Pay later
+                  </Typography.Text>
+                </Space>
+              </Card>
+            )}
 
-            <Card
-              hoverable
-              size="small"
-              style={{
-                textAlign: 'center',
-                cursor: 'pointer',
-                border: paymentChoice === 'pay_now' ? '2px solid #1890ff' : '1px solid #d9d9d9',
-                backgroundColor: paymentChoice === 'pay_now' ? '#f0f8ff' : '#fff'
-              }}
-              onClick={async () => {
-                setPaymentChoice('pay_now');
-                if (!createdBookingId) {
-                  try {
-                    setSubmitting(true);
-                    const booking = buildBookingPayload();
-                    const createResp = await createAppointment(
-                      { ...booking, metadata: buildWidgetMetadata() },
-                      tenantId,
-                      apiUrl
-                    );
-                    const newId = createResp?.id ?? createResp?.data?.id ?? createResp?.booking?.id ?? createResp?.data?.booking?.id;
-                    if (!newId) {
-                      throw new Error('Could not determine bookingId from createAppointment response');
+            {stripeEnabled && (
+              <Card
+                hoverable
+                size="small"
+                style={{
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  border: paymentChoice === 'pay_now' ? '2px solid #1890ff' : '1px solid #d9d9d9',
+                  backgroundColor: paymentChoice === 'pay_now' ? '#f0f8ff' : '#fff'
+                }}
+                onClick={async () => {
+                  setPaymentChoice('pay_now');
+                  if (!createdBookingId) {
+                    try {
+                      setSubmitting(true);
+                      const booking = buildBookingPayload();
+                      const createResp = await createAppointment(
+                        { ...booking, metadata: buildWidgetMetadata() },
+                        tenantId,
+                        apiUrl
+                      );
+                      const newId = createResp?.id ?? createResp?.data?.id ?? createResp?.booking?.id ?? createResp?.data?.booking?.id;
+                      if (!newId) {
+                        throw new Error('Could not determine bookingId from createAppointment response');
+                      }
+                      setCreatedBookingId(String(newId));
+                    } catch (err) {
+                      console.error('Error preparing payment:', err);
+                      setPaymentChoice(null);
+                    } finally {
+                      setSubmitting(false);
                     }
-                    setCreatedBookingId(String(newId));
-                  } catch (err) {
-                    console.error('Error preparing payment:', err);
-                    setPaymentChoice(null);
-                  } finally {
-                    setSubmitting(false);
                   }
-                }
-              }}
-              bodyStyle={{ padding: '16px 12px' }}
-            >
-              <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                <CreditCardOutlined style={{ fontSize: 32, color: '#595959' }} />
-                <Typography.Text strong style={{ fontSize: 14 }}>
-                  Pay now
-                </Typography.Text>
-              </Space>
-            </Card>
+                }}
+                bodyStyle={{ padding: '16px 12px' }}
+              >
+                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                  <CreditCardOutlined style={{ fontSize: 32, color: '#595959' }} />
+                  <Typography.Text strong style={{ fontSize: 14 }}>
+                    Pay now
+                  </Typography.Text>
+                </Space>
+              </Card>
+            )}
           </div>
 
           {/* Payment Widget - only show if pay_now is selected and booking is created */}
-          {paymentChoice === 'pay_now' && createdBookingId && (
+          {stripeEnabled && paymentChoice === 'pay_now' && createdBookingId && (
             <div style={{
               border: '1px solid #f0f0f0',
               borderRadius: 8,
@@ -333,8 +341,10 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormProps> = ({
           )}
         </div>
       )
-    }
+    }] : [])
   ]
+
+  const paymentStepIndex = steps.findIndex(s => s.title === 'Payment');
 
   const next = async () => {
     if (submitting) return;
@@ -354,8 +364,8 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormProps> = ({
       }
     }
 
-    // Payment step index = 3 (now that Review is step 2)
-    if (current === 3) {
+    // Handle Payment step or final submission when payment step is omitted
+    if (paymentStepIndex !== -1 && current === paymentStepIndex) {
       if (!paymentChoice) return;
 
       if (paymentChoice === 'pay_later') {
@@ -365,6 +375,10 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormProps> = ({
       }
 
       // For pay_now, the widget should already be loaded and handle payment
+      return;
+    }
+    if (paymentStepIndex === -1 && current === steps.length - 1) {
+      await onSubmit();
       return;
     }
 
@@ -809,9 +823,9 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormProps> = ({
               <Row gutter={[16, 16]}>
                 {current > 0 && (
                   <Col xs={24} sm={
-                    current === 3 && paymentChoice === 'pay_now' ? 24 : // Full width when pay_now
-                      current === 3 && paymentChoice === 'pay_later' ? 12 : // Half width when pay_later  
-                        current === 3 ? 24 : // Full width when no selection
+                    current === paymentStepIndex && paymentChoice === 'pay_now' ? 24 : // Full width when pay_now
+                      current === paymentStepIndex && paymentChoice === 'pay_later' ? 12 : // Half width when pay_later
+                        current === paymentStepIndex ? 24 : // Full width when no selection
                           12 // Half width for other steps
                   }>
                     <Button
@@ -824,7 +838,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormProps> = ({
                     </Button>
                   </Col>
                 )}
-                {current !== 3 && (
+                {current !== paymentStepIndex && (
                   <Col xs={24} sm={current > 0 ? 12 : 24}>
                     <Button
                       type='primary'
@@ -837,7 +851,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormProps> = ({
                     </Button>
                   </Col>
                 )}
-                {current === 3 && paymentChoice === 'pay_later' && (
+                {current === paymentStepIndex && paymentChoice === 'pay_later' && (
                   <Col xs={24} sm={12}>
                     <Button
                       type='primary'

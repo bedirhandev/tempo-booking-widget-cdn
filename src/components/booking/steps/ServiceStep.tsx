@@ -14,6 +14,7 @@ import DateSelector from '@/components/booking/components/DateSelector'
 import TimeSelector from '@/components/booking/components/TimeSelector'
 import EmployeeSelector from '@/components/booking/components/EmployeeSelector'
 import { useAvailableTimes } from '@/components/booking/hooks/useAvailableTimes'
+import { useFinancialSettings } from '@/components/booking/financial/FinancialSettingsProvider'
 
 dayjs.extend(isoWeek)
 
@@ -189,9 +190,10 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
     }))
   }, [form, services, employees, availableTimes, setFormValues, setBookingValues])
 
-  const formatPrice = useCallback((price: number, currency: string = '$'): string => {
-    return `${currency}${price.toFixed(2)}`
-  }, [])
+  const { currencySymbol } = useFinancialSettings()
+  const formatPrice = useCallback((price: number): string => {
+    return `${currencySymbol}${price.toFixed(2)}`
+  }, [currencySymbol])
 
   const initialValues = useMemo(() => ({
     service: bookingValues.serviceId ? Number(bookingValues.serviceId) : undefined,

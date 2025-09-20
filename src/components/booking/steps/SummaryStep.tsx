@@ -1,6 +1,7 @@
 import React from 'react'
 import { Descriptions, Grid } from 'antd'
 import type { FormValues } from '@/components/booking/types'
+import { useFinancialSettings } from '@/components/booking/financial/FinancialSettingsProvider'
 
 const { useBreakpoint } = Grid
 
@@ -10,6 +11,15 @@ interface SummaryStepProps {
 
 const SummaryStep: React.FC<SummaryStepProps> = ({ formValues }) => {
   const screens = useBreakpoint()
+  const { currencySymbol } = useFinancialSettings()
+
+  const priceDisplay = React.useMemo(() => {
+    const v = formValues.price as any
+    if (v == null || v === '') return undefined
+    const num = typeof v === 'number' ? v : parseFloat(String(v))
+    if (!isNaN(num)) return `${currencySymbol}${num.toFixed(2)}`
+    return `${currencySymbol}${v}`
+  }, [formValues.price, currencySymbol])
 
   return (
     <Descriptions
@@ -25,7 +35,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ formValues }) => {
       }}
     >
       <Descriptions.Item label='Service'>{formValues.service}</Descriptions.Item>
-      <Descriptions.Item label='Price'>{formValues.price}</Descriptions.Item>
+      <Descriptions.Item label='Price'>{priceDisplay}</Descriptions.Item>
       <Descriptions.Item label='Date'>{formValues.date}</Descriptions.Item>
       <Descriptions.Item label='Time'>{formValues.time}</Descriptions.Item>
       <Descriptions.Item label='Employee'>{formValues.employee || 'Any available'}</Descriptions.Item>

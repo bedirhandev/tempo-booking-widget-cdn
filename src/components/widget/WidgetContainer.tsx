@@ -9,6 +9,7 @@ import { useIsMobile } from '@/components/booking/hooks/useIsMobile'
 import type { WidgetConfig } from '@/types/widget'
 import enUS from 'antd/locale/en_US'
 import enUSMobile from 'antd-mobile/es/locales/en-US'
+import { FinancialSettingsProvider } from '@/components/booking/financial/FinancialSettingsProvider'
 
 // Import antd-mobile global styles - this is why it works in dev mode
 //import 'antd-mobile/es/global';
@@ -178,7 +179,9 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
     return (
       <div className="booking-widget-container">
         <AntdMobileConfigProvider locale={enUSMobile}>
-          <WidgetContent />
+          <FinancialSettingsProvider tenantId={config.tenantId} apiUrl={config.apiUrl}>
+            <WidgetContent />
+          </FinancialSettingsProvider>
         </AntdMobileConfigProvider>
         {/* Portal container for antd-mobile popups and toasts */}
         {/* This container is reserved for future use when antd-mobile supports custom portal containers */}
@@ -197,7 +200,9 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
   return (
     <div className="booking-widget-container">
       <AntdConfigProvider theme={antdTheme} locale={enUS}>
-        <WidgetContent />
+        <FinancialSettingsProvider tenantId={config.tenantId} apiUrl={config.apiUrl}>
+          <WidgetContent />
+        </FinancialSettingsProvider>
       </AntdConfigProvider>
     </div>
   )

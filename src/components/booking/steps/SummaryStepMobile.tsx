@@ -2,12 +2,22 @@
 import React from 'react'
 import { List } from 'antd-mobile'
 import type { FormValues } from '@/components/booking/types'
+import { useFinancialSettings } from '@/components/booking/financial/FinancialSettingsProvider'
 
 interface SummaryStepMobileProps {
     formValues: FormValues
 }
 
 const SummaryStepMobile: React.FC<SummaryStepMobileProps> = ({ formValues }) => {
+    const { currencySymbol } = useFinancialSettings()
+    const priceDisplay = React.useMemo(() => {
+        const v: any = formValues.price
+        if (v == null || v === '') return undefined
+        const num = typeof v === 'number' ? v : parseFloat(String(v))
+        if (!isNaN(num)) return `${currencySymbol}${num.toFixed(2)}`
+        return `${currencySymbol}${v}`
+    }, [formValues.price, currencySymbol])
+
     return (
         <div>
             <List mode='card'>
@@ -17,7 +27,7 @@ const SummaryStepMobile: React.FC<SummaryStepMobileProps> = ({ formValues }) => 
                 />
                 <List.Item
                     title='Price'
-                    description={formValues.price}
+                    description={priceDisplay}
                 />
                 <List.Item
                     title='Date'

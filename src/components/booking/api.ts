@@ -129,3 +129,31 @@ export async function getBookingByPaymentIntent(
   );
   return response;
 }
+
+export type FinancialSettingsResponse = {
+  financial: {
+    currency: string;
+    payLaterEnabled: boolean;
+    stripeEnabled: boolean;
+  };
+};
+
+/**
+ * Get tenant financial settings.
+ * GET /api/v1/{tenantId}/financial-settings
+ */
+export async function getFinancialSettings(
+  tenantId: string,
+  baseUrl: string = defaultBaseUrl
+): Promise<FinancialSettingsResponse> {
+  try {
+    const response = await axios.get(
+      `${baseUrl}/${tenantId}/financial-settings`,
+      { headers: { Accept: 'application/json' } }
+    );
+    return response.data as FinancialSettingsResponse;
+  } catch (error) {
+    console.error('Error fetching financial settings:', error);
+    throw error;
+  }
+}
