@@ -6,11 +6,13 @@ const defaultBaseUrl: string = 'http://127.0.0.1:8000/api/v1';
 
 export const createAppointment = async (data: any, tenantId: string, baseUrl: string = defaultBaseUrl) => {
   const pad = (n: number) => n.toString().padStart(2, "0");
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const payload = {
     ...data,
     date: data.date
       ? `${data.date.getFullYear()}-${pad(data.date.getMonth() + 1)}-${pad(data.date.getDate())}`
       : undefined,
+    timezone: userTimezone,
   };
   try {
     const response = await axios.post(`${baseUrl}/${tenantId}/appointments`, payload);
