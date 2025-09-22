@@ -15,9 +15,7 @@ import ServicesStepSkeleton from '@/components/booking/steps/ServiceStepSkeleton
 
 import { createAppointment, getServices, getTeamMembers, getBookingByPaymentIntent } from '@/components/booking/api'
 import PaymentWidget from '@/components/payment/PaymentWidget'
-import { useFinancialSettings } from '@/components/booking/financial/FinancialSettingsProvider' // Update this import path
-
-const { Step } = Steps
+import { useFinancialSettings } from '@/components/booking/financial/FinancialSettingsProvider'
 
 const initialBookingState: Booking = {
   id: '',

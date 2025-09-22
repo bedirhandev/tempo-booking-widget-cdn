@@ -11,7 +11,7 @@ import dayjs, { Dayjs } from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 import ServiceSelectorMobile from '@/components/booking/components/ServiceSelectorMobile'
 import DateSelectorMobile from '@/components/booking/components/DateSelectorMobile'
-import TimeSelector from '@/components/booking/components/TimeSelector'
+import TimeSelectorMobile from '@/components/booking/components/TimeSelectorMobile'
 import EmployeeSelectorMobile from '@/components/booking/components/EmployeeSelectorMobile'
 import { useAvailableTimes } from '@/components/booking/hooks/useAvailableTimes'
 import { useFinancialSettings } from '@/components/booking/financial/FinancialSettingsProvider'
@@ -52,7 +52,7 @@ const ServiceStepMobile: React.FC<ServiceStepMobileProps> = ({
     tenantId,
     serviceId: selectedServiceId,
     date: selectedDate?.format('YYYY-MM-DD'),
-    timeFormat: '24hr',
+    timeFormat: '12hr',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
   })
 
@@ -205,7 +205,7 @@ const ServiceStepMobile: React.FC<ServiceStepMobileProps> = ({
       serviceId: allValues.service ? String(allValues.service) : undefined,
       employeeId: allValues.employee ? String(allValues.employee) : undefined,
       date: allValues.date,
-      time: allValues.time, // already the ISO string from TimeSelector selection
+      time: allValues.time, // already the ISO string from TimeSelectorMobile selection
       note: allValues.notes,
       notificationEnabled: allValues.notifications
     }))
@@ -246,7 +246,7 @@ const ServiceStepMobile: React.FC<ServiceStepMobileProps> = ({
           />
         </Col>
         <Col xs={24} sm={12}>
-          <TimeSelector
+          <TimeSelectorMobile
             name="time"
             label="Time"
             placeholder={
