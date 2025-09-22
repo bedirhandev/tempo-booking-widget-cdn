@@ -46,6 +46,8 @@ export interface Service {
     id: number;
     name: string;
     price: string;
+    duration?: number;
+    duration_formatted?: string;
 }
 
 export interface ServicesResponse {

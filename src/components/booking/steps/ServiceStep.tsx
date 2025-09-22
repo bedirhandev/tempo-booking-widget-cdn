@@ -52,7 +52,7 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
     tenantId,
     serviceId: selectedServiceId,
     date: selectedDate?.format('YYYY-MM-DD'),
-    timeFormat: '24hr',
+    timeFormat: '12hr',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
   })
 
@@ -78,10 +78,31 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
 
   formRef.current = form
 
-  // Utility to convert "HH:mm" → minutes for comparison
+  // Utility to convert time string (12hr or 24hr) → minutes since midnight
   const convertTimeToMinutes = useCallback((timeString: string): number => {
-    const [hours, minutes] = timeString.split(':').map(Number)
-    return hours * 60 + minutes
+    if (!timeString) return NaN
+    const s = timeString.trim().toUpperCase()
+    // Match h:mm, hh:mm, optional seconds, optional AM/PM (with or without space)
+    const m = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/)
+    if (m) {
+      let hours = parseInt(m[1], 10)
+      const minutes = parseInt(m[2], 10)
+      const meridiem = m[3]
+      if (meridiem) {
+        if (meridiem === 'AM') {
+          if (hours === 12) hours = 0
+        } else if (meridiem === 'PM') {
+          if (hours !== 12) hours += 12
+        }
+      }
+      return hours * 60 + minutes
+    }
+    // Fallback: plain "HH:mm" without AM/PM or minor variations
+    const [h, min] = timeString.split(':').map(Number)
+    if (!Number.isNaN(h) && !Number.isNaN(min)) {
+      return h * 60 + min
+    }
+    return NaN
   }, [])
 
   const isEmployeeAbsent = useCallback((employee: TeamMember, date: Dayjs): boolean => {

@@ -12,6 +12,7 @@ export const createAppointment = async (data: any, tenantId: string, baseUrl: st
     date: data.date
       ? `${data.date.getFullYear()}-${pad(data.date.getMonth() + 1)}-${pad(data.date.getDate())}`
       : undefined,
+    notificationEnabled: true,
     timezone: userTimezone,
   };
   try {
@@ -46,7 +47,7 @@ export async function getAvailableTimeSlots(
   baseUrl: string = defaultBaseUrl
 ): Promise<AxiosResponse> {
   const userTimezone = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
-  
+
   const response = await axios.get(`${baseUrl}/${tenantId}/available-time-slots`, {
     params: {
       serviceId,

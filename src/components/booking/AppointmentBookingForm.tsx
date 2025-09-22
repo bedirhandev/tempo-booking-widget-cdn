@@ -6,6 +6,8 @@ import PersonalInfoStep from '@/components/booking/steps/PersonalInfoStep'
 import SummaryStep from '@/components/booking/steps/SummaryStep'
 import axios from 'axios'
 import dayjs from 'dayjs'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
+dayjs.extend(customParseFormat)
 
 import type { Booking, Customer, FormValues, Service, TeamMember } from '@/components/booking/types/index'
 
@@ -761,21 +763,97 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
         next.date = bookingValues.date.format('MMMM DD, YYYY');
       }
 
-      // Time formatting:
-      // - If ISO datetime → HH:mm
-      // - If HH:mm:ss → HH:mm
-      // - If already a label (e.g., "08:00 - 08:30") keep as-is
-      if (bookingValues.time) {
-        const t = bookingValues.time as string;
+      // Time formatting with service duration range:
+      // Prefer preserved user-facing label from formValues.time (keeps 12h/24h exactly as chosen).
+      // Otherwise, compute "start - end" from bookingValues.time and format to match input style.
+      if (formValues.time) {
+        next.time = formValues.time;
+      } else if (bookingValues.time) {
+        const t = String(bookingValues.time);
         let displayTime = t;
 
         if (t.includes(' - ')) {
+          // Already a range (either 12h or 24h), keep as-is
           displayTime = t;
-        } else if (t.includes('T')) {
-          const d = dayjs(t);
-          if (d.isValid()) displayTime = d.format('HH:mm');
-        } else if (/^\d{2}:\d{2}:\d{2}$/.test(t)) {
-          displayTime = t.slice(0, 5);
+        } else {
+          // Build a Dayjs start from available context
+          let start: dayjs.Dayjs | null = null;
+
+          // Determine desired output style based on input
+          const is12hInput = /(?:\bAM\b|\bPM\b)/i.test(t);
+
+          if (t.includes('T')) {
+            // ISO-like
+            const d = dayjs(t);
+            if (d.isValid()) start = d;
+          } else {
+            // Prefer selected date; fallback to today to construct a valid datetime
+            const baseDate = bookingValues.date
+              ? bookingValues.date.format('YYYY-MM-DD')
+              : dayjs().format('YYYY-MM-DD');
+
+            // Try parsing with multiple formats (strict)
+            const candidates = is12hInput
+              ? [
+                  'YYYY-MM-DD h:mm A',
+                  'YYYY-MM-DD hh:mm A',
+                  'YYYY-MM-DD h:mm:ss A',
+                  'YYYY-MM-DD hh:mm:ss A'
+                ]
+              : [
+                  'YYYY-MM-DD HH:mm',
+                  'YYYY-MM-DD H:mm',
+                  'YYYY-MM-DD HH:mm:ss',
+                  'YYYY-MM-DD H:mm:ss'
+                ];
+
+            for (const fmt of candidates) {
+              const d = dayjs(`${baseDate} ${t}`, fmt, true);
+              if (d.isValid()) {
+                start = d;
+                break;
+              }
+            }
+
+            // Extra tolerant fallback: normalize common bare times
+            if (!start) {
+              let normalized = t.trim();
+              if (/^\d{2}:\d{2}:\d{2}$/.test(normalized)) normalized = normalized.slice(0, 5);
+
+              const fallbackFormats = [
+                'YYYY-MM-DD HH:mm',
+                'YYYY-MM-DD H:mm',
+                'YYYY-MM-DD h:mm A',
+                'YYYY-MM-DD hh:mm A'
+              ];
+              for (const fmt of fallbackFormats) {
+                const d = dayjs(`${baseDate} ${normalized}`, fmt, true);
+                if (d.isValid()) {
+                  start = d;
+                  break;
+                }
+              }
+            }
+          }
+
+          // Determine service duration (minutes)
+          const svc = servicesData?.find(s => String(s.id) === String(bookingValues.serviceId));
+          const durationMin = typeof svc?.duration === 'number' ? svc!.duration : undefined;
+
+          if (start) {
+            const fmt = is12hInput ? 'h:mm A' : 'HH:mm';
+            const startStr = start.format(fmt);
+            if (durationMin && durationMin > 0) {
+              const end = start.add(durationMin, 'minute');
+              const endStr = end.format(fmt);
+              displayTime = `${startStr} - ${endStr}`;
+            } else {
+              displayTime = startStr;
+            }
+          } else if (/^\d{2}:\d{2}:\d{2}$/.test(t)) {
+            // Basic fallback formatting
+            displayTime = t.slice(0, 5);
+          }
         }
 
         next.time = displayTime;
@@ -789,7 +867,14 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
       // ignore
     }
 
-    setFormValues(prev => ({ ...prev, ...next }));
+    // Preserve user-selected time label (e.g., 12hr "7:00 AM - 8:00 AM") if it already exists,
+    // to avoid being overwritten by async recomputations based on bookingValues.time (ISO).
+    setFormValues(prev => {
+      if (prev.time) {
+        return { ...prev, ...next, time: prev.time };
+      }
+      return { ...prev, ...next };
+    });
   }
 
   // Keep summary derived when dependencies change (rehydration, data fetch, edits)
