@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import { getDefaultTimeFormatPattern } from '@/components/booking/utils/timeFormat';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -19,7 +20,7 @@ export function convertUtcToLocal(
  */
 export function convertUtcTimeToLocal(
     timeString: string,
-    format: string = "HH:mm"
+    format: string = getDefaultTimeFormatPattern()
 ): string {
     const today = dayjs().format('YYYY-MM-DD');
     return dayjs.utc(`${today} ${timeString}`).local().format(format);
@@ -71,21 +72,22 @@ export function transformUserTimeEntriesToLocal<T extends { timeEntries?: any[] 
     if (!user.timeEntries) return user
 
     const today = dayjs().format("YYYY-MM-DD")
-
+    const TF = getDefaultTimeFormatPattern()
+    
     const transformed = user.timeEntries.map((entry) => {
         if (!entry.timePeriod) return entry
-
+    
         const [startUtc, endUtc] = entry.timePeriod.split(" - ")
-
+    
         // Convert each part from UTC → Local
         const localStart = dayjs.utc(`${today} ${startUtc}`, "YYYY-MM-DD HH:mm")
             .local()
-            .format("HH:mm")
-
+            .format(TF)
+    
         const localEnd = dayjs.utc(`${today} ${endUtc}`, "YYYY-MM-DD HH:mm")
             .local()
-            .format("HH:mm")
-
+            .format(TF)
+    
         return {
             ...entry,
             timePeriod: `${localStart} - ${localEnd}`,

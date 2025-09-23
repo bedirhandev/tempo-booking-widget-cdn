@@ -2,12 +2,13 @@
 import dayjs, { Dayjs } from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
+import { getDefaultTimeFormatPattern } from '@/components/booking/utils/timeFormat'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
 const DEFAULT_DATE_FORMAT = 'YYYY-MM-DD'
-const DEFAULT_TIME_FORMAT = 'HH:mm'
+const DEFAULT_TIME_FORMAT = getDefaultTimeFormatPattern()
 const DEFAULT_DATETIME_FORMAT = 'YYYY-MM-DD HH:mm'
 
 /**

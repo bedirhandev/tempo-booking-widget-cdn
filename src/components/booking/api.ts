@@ -1,6 +1,7 @@
 import axios, { type AxiosResponse } from "axios";
 import type { ServicesResponse, TeamMembersResponse } from "@/components/booking/types/index"
 import { transformBookingToLocal } from "./utils/datetime";
+import { getUserTimeFormatMode } from '@/components/booking/utils/timeFormat'
 
 const defaultBaseUrl: string = 'http://127.0.0.1:8000/api/v1';
 
@@ -42,7 +43,7 @@ export async function getAvailableTimeSlots(
   tenantId: string,
   serviceId: number,
   date: string,
-  timeFormat: '12hr' | '24hr' = '24hr',
+  timeFormat: '12hr' | '24hr' = getUserTimeFormatMode(),
   timezone?: string,
   baseUrl: string = defaultBaseUrl
 ): Promise<AxiosResponse> {

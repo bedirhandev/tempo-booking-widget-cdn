@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import { Form, DatePicker, TimePicker } from 'antd'
 import dayjs from 'dayjs'
 import type { FormValues } from '@/components/booking/types'
+import { getDefaultTimeFormatPattern } from '@/components/booking/utils/timeFormat'
 
 interface DateTimeStepProps {
   formRef: React.RefObject<any>
@@ -28,9 +29,10 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ formRef, formValues, setFor
   }
 
   const handleTimeChange = (time: any) => {
+    const TF = getDefaultTimeFormatPattern()
     setFormValues({
       ...formValues,
-      time: time ? time.format('HH:mm') : undefined
+      time: time ? time.format(TF) : undefined
     })
   }
 
@@ -48,9 +50,9 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ formRef, formValues, setFor
         label='Select Time'
         name='time'
         rules={[{ required: true, message: 'Please select a time!' }]}
-        initialValue={formValues.time ? dayjs(formValues.time, 'HH:mm') : null}
+        initialValue={formValues.time ? dayjs(formValues.time, getDefaultTimeFormatPattern()) : null}
       >
-        <TimePicker onChange={handleTimeChange} format='HH:mm' style={{ width: '100%' }} />
+        <TimePicker onChange={handleTimeChange} format={getDefaultTimeFormatPattern()} style={{ width: '100%' }} />
       </Form.Item>
     </Form>
   )

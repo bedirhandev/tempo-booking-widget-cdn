@@ -15,6 +15,7 @@ import TimeSelectorMobile from '@/components/booking/components/TimeSelectorMobi
 import EmployeeSelectorMobile from '@/components/booking/components/EmployeeSelectorMobile'
 import { useAvailableTimes } from '@/components/booking/hooks/useAvailableTimes'
 import { useFinancialSettings } from '@/components/booking/financial/FinancialSettingsProvider'
+import { getUserTimeFormatMode } from '@/components/booking/utils/timeFormat'
 
 dayjs.extend(isoWeek)
 
@@ -47,12 +48,14 @@ const ServiceStepMobile: React.FC<ServiceStepMobileProps> = ({
   // Gate: only when service + date + time are selected we compute employees
   const canPickEmployee = !!(selectedServiceId && selectedDate && selectedTime)
 
+  const timeFormatMode = useMemo(() => getUserTimeFormatMode(), [])
+
   // Custom hook for available times (backend already returns converted slots)
   const { availableTimes, isLoadingTimes } = useAvailableTimes({
     tenantId,
     serviceId: selectedServiceId,
     date: selectedDate?.format('YYYY-MM-DD'),
-    timeFormat: '12hr',
+    timeFormat: timeFormatMode,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
   })
 
