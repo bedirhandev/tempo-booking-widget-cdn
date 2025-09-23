@@ -17,6 +17,7 @@ import { createAppointment, getServices, getTeamMembers, getBookingByPaymentInte
 import PaymentWidget from '@/components/payment/PaymentWidget'
 import { useFinancialSettings } from '@/components/booking/financial/FinancialSettingsProvider'
 
+import { formatUtcDateInZone, formatUtcRangeInZone } from '@/components/booking/utils/timezoneUtils'
 const initialBookingState: Booking = {
   id: '',
   serviceId: undefined,
@@ -707,6 +708,30 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
               email: custSrc.email ?? prev.email,
               phoneNumber: custSrc.phone ?? prev.phoneNumber,
             }));
+
+            // Timezone-aware summary from server UTC datetimes (after payment/rehydration)
+            try {
+              const customerTz =
+                b.customer_timezone ?? b.customerTimezone ?? widgetMeta?.customer_timezone ?? widgetMeta?.customerTimezone;
+              const zone = customerTz || Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+              const startUtc: string | undefined = b.start_datetime ?? b.startDatetime;
+              const endUtc: string | undefined = b.end_datetime ?? b.endDatetime;
+
+              if (startUtc) {
+                const dateStr = formatUtcDateInZone(startUtc, zone);
+                const timeStr = endUtc
+                  ? formatUtcRangeInZone(startUtc, endUtc, zone)
+                  : formatUtcRangeInZone(startUtc, startUtc, zone).split(' - ')[0];
+
+                // Set explicit display values so later recomputations preserve them
+                setFormValues(prev => ({
+                  ...prev,
+                  date: dateStr,
+                  time: timeStr,
+                }));
+              }
+            } catch { /* noop */ }
 
             setPaymentChoice('pay_now');
 

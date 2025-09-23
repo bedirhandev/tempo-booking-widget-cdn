@@ -63,3 +63,43 @@ export function timeRangesOverlap(
 ): boolean {
   return start1.isBefore(end2) && start2.isBefore(end1)
 }
+
+// Added helpers to convert UTC datetimes into arbitrary IANA timezones
+
+export const DISPLAY_DATE_FORMAT = 'MMMM DD, YYYY'
+
+/**
+ * Convert a UTC ISO datetime string to a specific IANA timezone and format it.
+ */
+export function convertUtcToZone(
+  utcDateTime: string,
+  zone: string,
+  format: string = DEFAULT_DATETIME_FORMAT
+): string {
+  return dayjs.utc(utcDateTime).tz(zone).format(format)
+}
+
+/**
+ * Format a UTC start/end datetime range in a specific timezone, returning "HH:mm - HH:mm".
+ */
+export function formatUtcRangeInZone(
+  startUtc: string,
+  endUtc: string,
+  zone: string,
+  timeFormat: string = DEFAULT_TIME_FORMAT
+): string {
+  const start = dayjs.utc(startUtc).tz(zone)
+  const end = dayjs.utc(endUtc).tz(zone)
+  return `${start.format(timeFormat)} - ${end.format(timeFormat)}`
+}
+
+/**
+ * Get a human-friendly date string for a UTC datetime in a given timezone.
+ */
+export function formatUtcDateInZone(
+  utcDateTime: string,
+  zone: string,
+  format: string = DISPLAY_DATE_FORMAT
+): string {
+  return dayjs.utc(utcDateTime).tz(zone).format(format)
+}
