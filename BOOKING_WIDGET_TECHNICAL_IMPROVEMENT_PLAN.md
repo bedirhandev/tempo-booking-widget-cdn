@@ -579,7 +579,7 @@ export const useBookingStore = create<BookingStore>()(
 );
 ```
 
-### 1.3 Centralized Error Handling System
+### 1.3 Centralized Error Handling System (Widget-Contained)
 
 ```typescript
 // src/services/errorHandler.ts
@@ -597,6 +597,7 @@ export class ErrorHandler {
   private recoveryStrategies: Map<string, ErrorRecoveryStrategy> = new Map();
   private errorLog: AppError[] = [];
   private readonly MAX_ERROR_LOG = 50;
+  private isWidgetContext = true; // Ensure we're in widget context
   
   static getInstance(): ErrorHandler {
     if (!ErrorHandler.instance) {
@@ -607,6 +608,61 @@ export class ErrorHandler {
   
   constructor() {
     this.registerDefaultStrategies();
+    this.setupGlobalErrorHandlers();
+  }
+  
+  /**
+   * Setup global error handlers to catch unhandled errors
+   * within the widget context only
+   */
+  private setupGlobalErrorHandlers() {
+    // Store original handlers
+    const originalErrorHandler = window.onerror;
+    const originalUnhandledRejection = window.onunhandledrejection;
+    
+    // Override window.onerror for widget errors only
+    window.onerror = (message, source, lineno, colno, error) => {
+      // Check if error originated from widget code
+      if (this.isWidgetError(source)) {
+        this.handle(error || new Error(String(message)));
+        return true; // Prevent bubbling
+      }
+      
+      // Call original handler for non-widget errors
+      if (originalErrorHandler) {
+        return originalErrorHandler(message, source, lineno, colno, error);
+      }
+      return false;
+    };
+    
+    // Override unhandledrejection for widget promises only
+    window.addEventListener('unhandledrejection', (event) => {
+      // Check if the promise rejection is from widget code
+      if (this.isWidgetPromise(event)) {
+        event.preventDefault(); // Prevent default error handling
+        this.handle(new Error(event.reason));
+      }
+    });
+    
+    // Cleanup function for when widget is destroyed
+    window.bookingWidgetCleanup = () => {
+      window.onerror = originalErrorHandler;
+      window.onunhandledrejection = originalUnhandledRejection;
+    };
+  }
+  
+  private isWidgetError(source: string | undefined): boolean {
+    if (!source) return false;
+    // Check if error source is from widget files
+    return source.includes('booking-widget') ||
+           source.includes('/widget/') ||
+           source.includes('BookingWidget');
+  }
+  
+  private isWidgetPromise(event: PromiseRejectionEvent): boolean {
+    // Check stack trace to determine if from widget
+    const stack = event.reason?.stack || '';
+    return this.isWidgetError(stack);
   }
   
   private registerDefaultStrategies() {
@@ -677,25 +733,33 @@ export class ErrorHandler {
   }
   
   async handle(error: Error | AppError): Promise<void> {
-    // Log error
-    this.logError(error);
-    
-    // Convert to AppError if needed
-    const appError = this.normalizeError(error);
-    
-    // Try automatic recovery
-    const strategy = this.recoveryStrategies.get(appError.code);
-    if (strategy && strategy.canRecover(appError)) {
-      try {
-        await strategy.recover(appError);
-        return;
-      } catch (recoveryError) {
-        console.error('Recovery failed', recoveryError);
+    try {
+      // Wrap all error handling in try-catch to prevent any errors from escaping
+      
+      // Log error
+      this.logError(error);
+      
+      // Convert to AppError if needed
+      const appError = this.normalizeError(error);
+      
+      // Try automatic recovery
+      const strategy = this.recoveryStrategies.get(appError.code);
+      if (strategy && strategy.canRecover(appError)) {
+        try {
+          await strategy.recover(appError);
+          return;
+        } catch (recoveryError) {
+          console.error('[Widget] Recovery failed', recoveryError);
+        }
       }
+      
+      // Fallback to showing error to user
+      this.showErrorToUser(appError);
+    } catch (handlingError) {
+      // Even error handling failed - log but don't throw
+      console.error('[Widget] Error handler failed:', handlingError);
+      console.error('[Widget] Original error:', error);
     }
-    
-    // Fallback to showing error to user
-    this.showErrorToUser(appError);
   }
   
   private normalizeError(error: Error | AppError): AppError {
@@ -809,21 +873,35 @@ export class ErrorHandler {
   }
   
   private logError(error: Error | AppError) {
-    this.errorLog.push(this.normalizeError(error));
-    
-    // Keep log size manageable
-    if (this.errorLog.length > this.MAX_ERROR_LOG) {
-      this.errorLog.shift();
-    }
-    
-    // Send to monitoring service
-    if (window.Sentry) {
-      window.Sentry.captureException(error);
-    }
-    
-    // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[ErrorHandler]', error);
+    try {
+      const normalizedError = this.normalizeError(error);
+      this.errorLog.push(normalizedError);
+      
+      // Keep log size manageable
+      if (this.errorLog.length > this.MAX_ERROR_LOG) {
+        this.errorLog.shift();
+      }
+      
+      // Send to monitoring service with widget context
+      if (window.Sentry && this.isWidgetContext) {
+        window.Sentry.withScope((scope) => {
+          scope.setTag('component', 'booking-widget');
+          scope.setTag('tenant', window.widgetConfig?.tenantId || 'unknown');
+          scope.setContext('widget', {
+            version: '2.0.0',
+            instance: sessionStorage.getItem('widget_instance_id') || 'unknown'
+          });
+          window.Sentry.captureException(error);
+        });
+      }
+      
+      // Log to console in development with widget prefix
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[BookingWidget Error]', error);
+      }
+    } catch (logError) {
+      // Even logging failed - don't let it escape
+      console.error('[Widget] Logging failed:', logError);
     }
   }
   
@@ -844,10 +922,84 @@ export class ErrorHandler {
   clearErrorLog(): void {
     this.errorLog = [];
   }
+  
+  /**
+   * Destroy error handler and cleanup global handlers
+   * Should be called when widget is unmounted
+   */
+  destroy(): void {
+    if (window.bookingWidgetCleanup) {
+      window.bookingWidgetCleanup();
+      delete window.bookingWidgetCleanup;
+    }
+    this.clearErrorLog();
+    this.recoveryStrategies.clear();
+  }
 }
 
 // Export singleton instance
 export const errorHandler = ErrorHandler.getInstance();
+
+// Widget Error Boundary Component
+export class WidgetErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Log error to our error handler
+    errorHandler.handle(error);
+    
+    // Log component stack in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[Widget ErrorBoundary]', errorInfo.componentStack);
+    }
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="widget-error-fallback" style={{
+          padding: '20px',
+          textAlign: 'center',
+          backgroundColor: '#f5f5f5',
+          borderRadius: '8px',
+          margin: '20px'
+        }}>
+          <h3>Booking Widget Error</h3>
+          <p>We're sorry, but something went wrong with the booking widget.</p>
+          <button
+            onClick={() => {
+              this.setState({ hasError: false, error: null });
+              window.location.reload();
+            }}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#1890ff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              marginTop: '10px'
+            }}
+          >
+            Reload Widget
+          </button>
+        </div>
+      );
+    }
+    
+    return this.props.children;
+  }
+}
 ```
 
 ### 1.4 Updated AppointmentBookingForm Component

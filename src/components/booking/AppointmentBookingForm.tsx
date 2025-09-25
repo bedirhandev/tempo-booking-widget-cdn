@@ -519,6 +519,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
         : bookingValues.time
 
       const booking: any = {
+        bookingId: bookingValues.id || "",
         userId: bookingValues.employeeId || "",
         teamId: undefined,
         serviceId: bookingValues.serviceId || "",
@@ -680,6 +681,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
 
             setBookingValues(prev => ({
               ...prev,
+              id: bId ?? prev.id,
               serviceId: resolvedServiceId ?? prev.serviceId,
               employeeId: resolvedEmployeeId ?? prev.employeeId,
               note: b.note ?? prev.note,
