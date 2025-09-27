@@ -11,13 +11,13 @@ dayjs.extend(customParseFormat)
 
 import type { Booking, Customer, FormValues, Service, TeamMember } from '@/components/booking/types/index'
 
-import ServicesStepSkeletonMobile from '@/components/booking/steps/ServiceStepSkeleton'
+import ServiceStepSkeletonMobile from '@/components/booking/steps/ServiceStepSkeletonMobile'
 
 import { createAppointment, getServices, getTeamMembers, getBookingByPaymentIntent } from '@/components/booking/api'
 import PaymentWidget from '@/components/payment/PaymentWidget'
 import { useFinancialSettings } from '@/components/booking/financial/FinancialSettingsProvider'
-
 import { formatUtcDateInZone, formatUtcRangeInZone } from '@/components/booking/utils/timezoneUtils'
+
 const initialBookingState: Booking = {
   id: '',
   serviceId: undefined,
@@ -70,7 +70,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
   onError
 }) => {
   const { payLaterEnabled, stripeEnabled, isReady: financialSettingsReady } = useFinancialSettings();
-  
+
   const [current, setCurrent] = useState(0)
   const [formValues, setFormValues] = useState<FormValues>(initialFormValues)
   const [bookingValues, setBookingValues] = useState<Booking>(initialBookingState)
@@ -94,11 +94,11 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
 
   // Determine if payment step is needed and what options are available
   const paymentStepNeeded = useMemo(() => payLaterEnabled || stripeEnabled, [payLaterEnabled, stripeEnabled]);
-  
+
   // Auto-select payment choice if only one option is available
   useEffect(() => {
     if (!paymentStepNeeded) return;
-    
+
     // If we're on the payment step and only one option is available, auto-select it
     if (current === 3 && paymentChoice === null) {
       if (payLaterEnabled && !stripeEnabled) {
@@ -217,7 +217,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
             tenantId={tenantId}
           />
         ) : (
-          <ServicesStepSkeletonMobile />
+          <ServiceStepSkeletonMobile />
         )
       },
       {
@@ -519,6 +519,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
         : bookingValues.time
 
       const booking: any = {
+        bookingId: bookingValues.id || "",
         userId: bookingValues.employeeId || "",
         teamId: undefined,
         serviceId: bookingValues.serviceId || "",
@@ -680,6 +681,7 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
 
             setBookingValues(prev => ({
               ...prev,
+              id: bId ?? prev.id,
               serviceId: resolvedServiceId ?? prev.serviceId,
               employeeId: resolvedEmployeeId ?? prev.employeeId,
               note: b.note ?? prev.note,
@@ -818,17 +820,17 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
             // Try parsing with multiple formats (strict)
             const candidates = is12hInput
               ? [
-                  'YYYY-MM-DD h:mm A',
-                  'YYYY-MM-DD hh:mm A',
-                  'YYYY-MM-DD h:mm:ss A',
-                  'YYYY-MM-DD hh:mm:ss A'
-                ]
+                'YYYY-MM-DD h:mm A',
+                'YYYY-MM-DD hh:mm A',
+                'YYYY-MM-DD h:mm:ss A',
+                'YYYY-MM-DD hh:mm:ss A'
+              ]
               : [
-                  'YYYY-MM-DD HH:mm',
-                  'YYYY-MM-DD H:mm',
-                  'YYYY-MM-DD HH:mm:ss',
-                  'YYYY-MM-DD H:mm:ss'
-                ];
+                'YYYY-MM-DD HH:mm',
+                'YYYY-MM-DD H:mm',
+                'YYYY-MM-DD HH:mm:ss',
+                'YYYY-MM-DD H:mm:ss'
+              ];
 
             for (const fmt of candidates) {
               const d = dayjs(`${baseDate} ${t}`, fmt, true);
