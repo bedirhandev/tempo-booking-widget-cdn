@@ -48,6 +48,16 @@ export interface Service {
     price: string;
     duration?: number;
     duration_formatted?: string;
+
+    // Multi-channel delivery (from backend)
+    deliveryChannels?: string[]; // ['virtual_meeting','phone_call','in_person']
+    availableChannels?: Array<{ value: string; label: string }>;
+    // Optional platform hints when virtual is enabled (if exposed)
+    enabledPlatforms?: string[]; // ['zoom','google_meet','microsoft_teams']
+
+    // Backward-compat flags (derive in UI when not provided)
+    is_in_person_enabled?: boolean;
+    is_virtual_enabled?: boolean;
 }
 
 export interface ServicesResponse {
@@ -101,6 +111,10 @@ export interface Booking {
     notificationEnabled: boolean
     date: Dayjs | null
     time: string | undefined
+
+    // Channel + platform selection (widget -> API)
+    deliveryChannel?: 'virtual_meeting' | 'phone_call' | 'in_person'
+    meetingPlatform?: 'zoom' | 'google_meet' | 'microsoft_teams'
 }
 
 export interface AvailableTime {

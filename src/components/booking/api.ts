@@ -161,3 +161,29 @@ export async function getFinancialSettings(
     throw error;
   }
 }
+
+// Meeting platforms (virtual providers) for a given provider (employee)
+export type ProviderPlatformsResponse = {
+  platforms: { value: string; label: string; connected?: boolean }[];
+};
+
+/**
+ * Get enabled virtual meeting platforms for a specific provider (employee).
+ * GET /api/v1/{tenantId}/providers/{userId}/meeting-platforms
+ */
+export async function getProviderPlatforms(
+  tenantId: string,
+  userId: string,
+  baseUrl: string = defaultBaseUrl
+): Promise<AxiosResponse<ProviderPlatformsResponse>> {
+  try {
+    const resp = await axios.get(
+      `${baseUrl}/${tenantId}/providers/${userId}/meeting-platforms`,
+      { headers: { Accept: 'application/json' } }
+    );
+    return resp as AxiosResponse<ProviderPlatformsResponse>;
+  } catch (error) {
+    console.error('Error fetching provider meeting platforms:', error);
+    throw error;
+  }
+}

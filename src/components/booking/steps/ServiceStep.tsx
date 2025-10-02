@@ -1,5 +1,5 @@
-import React, { useMemo, useCallback } from 'react'
-import { Form, Row, Col } from 'antd'
+import React, { useMemo, useCallback, useEffect, useState } from 'react'
+import { Form, Row, Col, Radio, Select, Typography } from 'antd'
 import type {
   Booking,
   TeamMember,
@@ -16,6 +16,7 @@ import EmployeeSelector from '@/components/booking/components/EmployeeSelector'
 import { useAvailableTimes } from '@/components/booking/hooks/useAvailableTimes'
 import { useFinancialSettings } from '@/components/booking/financial/FinancialSettingsProvider'
 import { getUserTimeFormatMode } from '@/components/booking/utils/timeFormat'
+import { getProviderPlatforms } from '@/components/booking/api'
 
 dayjs.extend(isoWeek)
 
@@ -27,6 +28,7 @@ interface ServiceStepProps {
   employeesData: TeamMember[]
   servicesData: Service[]
   tenantId: string
+  apiUrl?: string
 }
 
 const ServiceStep: React.FC<ServiceStepProps> = ({
@@ -36,7 +38,8 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
   setBookingValues,
   employeesData,
   servicesData,
-  tenantId
+  tenantId,
+  apiUrl
 }) => {
   const [form] = Form.useForm()
 
@@ -44,6 +47,12 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
   const selectedServiceId = Form.useWatch('service', form)
   const selectedDate: Dayjs | undefined = Form.useWatch('date', form)
   const selectedTime = Form.useWatch('time', form)
+  const selectedEmployeeId = Form.useWatch('employee', form)
+  const selectedChannel = Form.useWatch('deliveryChannel', form)
+
+  // Provider platforms state (for virtual meetings)
+  const [platforms, setPlatforms] = useState<{ value: string; label: string; connected?: boolean }[] | null>(null)
+  const [loadingPlatforms, setLoadingPlatforms] = useState(false)
 
   // Gate: only when service + date + time are selected we compute employees
   const canPickEmployee = !!(selectedServiceId && selectedDate && selectedTime)
@@ -78,6 +87,74 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
       )
     })) || []
   }), [servicesData, employeesData])
+
+  const selectedServiceObj = useMemo(() => {
+    if (!selectedServiceId) return undefined
+    return services.find(service => service.id == selectedServiceId)
+  }, [services, selectedServiceId])
+
+  // Channel options derived from backend response (support camelCase and snake_case), with legacy fallback
+  const channelOptions = useMemo(() => {
+    if (!selectedServiceObj) return [] as string[]
+
+    // 1) Prefer camelCase deliveryChannels (DTO style)
+    const camel = (selectedServiceObj as any).deliveryChannels
+    if (Array.isArray(camel) && camel.length) {
+      return camel as string[]
+    }
+
+    // 2) Prefer available_channels (array of { value, label }) from model accessor in public API
+    const availableSnake = (selectedServiceObj as any).available_channels
+    if (Array.isArray(availableSnake) && availableSnake.length) {
+      const values = availableSnake
+        .map((c: any) => c?.value)
+        .filter((v: any) => typeof v === 'string' && v.length > 0)
+      if (values.length) return values
+    }
+
+    // 3) Fallback to raw delivery_channels snake_case (JSON array)
+    const rawSnake = (selectedServiceObj as any).delivery_channels
+    if (Array.isArray(rawSnake) && rawSnake.length) {
+      return rawSnake
+    }
+
+    // 4) Legacy flags as last resort
+    const derived: string[] = []
+    if ((selectedServiceObj as any).is_in_person_enabled) derived.push('in_person')
+    if ((selectedServiceObj as any).is_virtual_enabled) derived.push('virtual_meeting')
+    return derived
+  }, [selectedServiceObj])
+
+  const channelLabel = useCallback((channel: string) => {
+    switch (channel) {
+      case 'virtual_meeting': return 'Virtual Meeting'
+      case 'phone_call': return 'Phone Call'
+      case 'in_person': return 'In-Person'
+      default: return channel
+    }
+  }, [])
+
+  // Fetch provider-enabled platforms when channel is virtual and employee chosen
+  useEffect(() => {
+    if (selectedChannel !== 'virtual_meeting') { setPlatforms(null); return }
+    const empId = selectedEmployeeId ? String(selectedEmployeeId) : undefined
+    if (!empId) { setPlatforms(null); return }
+    let cancelled = false
+    ;(async () => {
+      try {
+        setLoadingPlatforms(true)
+        const resp = await getProviderPlatforms(tenantId, empId, apiUrl)
+        if (cancelled) return
+        const items = resp.data?.platforms ?? []
+        setPlatforms(items)
+      } catch {
+        if (!cancelled) setPlatforms(null)
+      } finally {
+        if (!cancelled) setLoadingPlatforms(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [selectedChannel, selectedEmployeeId, tenantId, apiUrl])
 
   formRef.current = form
 
@@ -184,11 +261,17 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
 
   const handleValuesChange = useCallback((changedValues: any) => {
     if ('service' in changedValues) {
-      form.setFieldsValue({ date: undefined, time: undefined, employee: undefined })
+      form.setFieldsValue({ date: undefined, time: undefined, employee: undefined, deliveryChannel: undefined, meetingPlatform: undefined })
     } else if ('date' in changedValues) {
-      form.setFieldsValue({ time: undefined, employee: undefined })
+      form.setFieldsValue({ time: undefined, employee: undefined, meetingPlatform: undefined })
     } else if ('time' in changedValues) {
-      form.setFieldsValue({ employee: undefined })
+      form.setFieldsValue({ employee: undefined, meetingPlatform: undefined })
+    } else if ('deliveryChannel' in changedValues) {
+      // Reset platform when channel changes
+      form.setFieldsValue({ meetingPlatform: undefined })
+    } else if ('employee' in changedValues) {
+      // Reset platform when employee changes
+      form.setFieldsValue({ meetingPlatform: undefined })
     }
 
     const allValues = form.getFieldsValue()
@@ -210,7 +293,9 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
       date: allValues.date,
       time: allValues.time, // already the ISO string from TimeSelector selection
       note: allValues.notes,
-      notificationEnabled: allValues.notifications
+      notificationEnabled: allValues.notifications,
+      deliveryChannel: allValues.deliveryChannel,
+      meetingPlatform: allValues.meetingPlatform,
     }))
   }, [form, services, employees, availableTimes, setFormValues, setBookingValues])
 
@@ -225,7 +310,9 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
     date: bookingValues.date,
     time: bookingValues.time,
     notes: bookingValues.note,
-    notifications: bookingValues.notificationEnabled
+    notifications: bookingValues.notificationEnabled,
+    deliveryChannel: bookingValues.deliveryChannel,
+    meetingPlatform: bookingValues.meetingPlatform
   }), [bookingValues])
 
   return (
@@ -237,6 +324,7 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
       preserve={false}
     >
       <ServiceSelector services={services} formatPrice={formatPrice} />
+
 
       <Row gutter={16}>
         <Col xs={24} sm={12}>
@@ -278,6 +366,60 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
         }
         allowClear
       />
+
+      {/* Ask channel only AFTER an employee is selected (positioned after Employee) */}
+      {selectedServiceObj && !!selectedEmployeeId && channelOptions.length > 0 && (
+        <>
+          <Form.Item
+            name="deliveryChannel"
+            label="How would you like to meet?"
+            rules={[{ required: true, message: 'Please select a meeting channel' }]}
+          >
+            <Radio.Group optionType="button" buttonStyle="solid">
+              {channelOptions.includes('in_person') && (
+                <Radio.Button value="in_person">In-Person</Radio.Button>
+              )}
+              {channelOptions.includes('phone_call') && (
+                <Radio.Button value="phone_call">Phone Call</Radio.Button>
+              )}
+              {channelOptions.includes('virtual_meeting') && (
+                <Radio.Button value="virtual_meeting">Virtual Meeting</Radio.Button>
+              )}
+            </Radio.Group>
+          </Form.Item>
+
+          {selectedChannel === 'virtual_meeting' && (
+            <Form.Item
+              name="meetingPlatform"
+              label="Choose Platform"
+              rules={[{ required: true, message: 'Please select a platform' }]}
+              extra={
+                !selectedEmployeeId
+                  ? 'Pick an employee to see available platforms'
+                  : (!loadingPlatforms && (!platforms || platforms.length === 0)
+                      ? 'No connected platforms for the selected provider. Connect Zoom/Google/Teams in Meeting Integrations.'
+                      : undefined)
+              }
+            >
+              <Select
+                placeholder={
+                  !selectedEmployeeId
+                    ? 'Select employee first'
+                    : loadingPlatforms
+                      ? 'Loading...'
+                      : (platforms && platforms.length) ? 'Select a platform' : 'No platforms available'
+                }
+                disabled={!selectedEmployeeId || loadingPlatforms || !(platforms && platforms.length)}
+                options={(platforms || []).map(p => ({
+                  value: p.value,
+                  label: p.label || p.value
+                }))}
+                allowClear
+              />
+            </Form.Item>
+          )}
+        </>
+      )}
     </Form>
   )
 }

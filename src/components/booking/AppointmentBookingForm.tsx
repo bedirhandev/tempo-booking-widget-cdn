@@ -154,6 +154,9 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
       notificationEnabled: bookingValues.notificationEnabled,
       date: bookingValues.date!.toDate(), // Convert dayjs to Date object
       time: startTime || "",
+      // Channel and platform selections (optional)
+      deliveryChannel: bookingValues.deliveryChannel,
+      meetingPlatform: bookingValues.meetingPlatform,
     };
 
     return booking;
@@ -215,6 +218,7 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
             employeesData={employeesData}
             servicesData={servicesData}
             tenantId={tenantId}
+            apiUrl={apiUrl}
           />
         ) : (
           <ServicesStepSkeleton />
@@ -536,6 +540,9 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
         notificationEnabled: bookingValues.notificationEnabled,
         date: bookingValues.date!.toDate(), // Convert dayjs to Date object
         time: startTime || "",
+        // Channel and platform selections (optional)
+        deliveryChannel: bookingValues.deliveryChannel,
+        meetingPlatform: bookingValues.meetingPlatform,
       };
 
       await createAppointment(
