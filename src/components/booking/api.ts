@@ -163,8 +163,10 @@ export async function getFinancialSettings(
 }
 
 // Meeting platforms (virtual providers) for a given provider (employee)
+// Includes optional org-wide policy payload to allow the widget to hide Virtual Meeting when disabled.
 export type ProviderPlatformsResponse = {
   platforms: { value: string; label: string; connected?: boolean }[];
+  policy?: { allowed_platforms: string[] };
 };
 
 /**

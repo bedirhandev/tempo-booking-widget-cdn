@@ -50,9 +50,10 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
   const selectedEmployeeId = Form.useWatch('employee', form)
   const selectedChannel = Form.useWatch('deliveryChannel', form)
 
-  // Provider platforms state (for virtual meetings)
+  // Provider platforms + policy state (for virtual meetings)
   const [platforms, setPlatforms] = useState<{ value: string; label: string; connected?: boolean }[] | null>(null)
   const [loadingPlatforms, setLoadingPlatforms] = useState(false)
+  const [policyAllowed, setPolicyAllowed] = useState<string[] | null>(null)
 
   // Gate: only when service + date + time are selected we compute employees
   const canPickEmployee = !!(selectedServiceId && selectedDate && selectedTime)
@@ -134,11 +135,10 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
     }
   }, [])
 
-  // Fetch provider-enabled platforms when channel is virtual and employee chosen
+  // Fetch provider-enabled platforms + org policy whenever an employee is chosen
   useEffect(() => {
-    if (selectedChannel !== 'virtual_meeting') { setPlatforms(null); return }
     const empId = selectedEmployeeId ? String(selectedEmployeeId) : undefined
-    if (!empId) { setPlatforms(null); return }
+    if (!empId) { setPlatforms(null); setPolicyAllowed(null); return }
     let cancelled = false
     ;(async () => {
       try {
@@ -146,15 +146,40 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
         const resp = await getProviderPlatforms(tenantId, empId, apiUrl)
         if (cancelled) return
         const items = resp.data?.platforms ?? []
+        const allowed = resp.data?.policy?.allowed_platforms ?? null
         setPlatforms(items)
+        setPolicyAllowed(Array.isArray(allowed) ? allowed : null)
       } catch {
-        if (!cancelled) setPlatforms(null)
+        if (!cancelled) { setPlatforms(null); setPolicyAllowed(null) }
       } finally {
         if (!cancelled) setLoadingPlatforms(false)
       }
     })()
     return () => { cancelled = true }
-  }, [selectedChannel, selectedEmployeeId, tenantId, apiUrl])
+  }, [selectedEmployeeId, tenantId, apiUrl])
+
+  // If org-wide policy disables all meeting platforms, hide Virtual Meeting option entirely
+  const orgAllowsVirtual = useMemo(() => {
+    if (policyAllowed === null) return true; // unknown -> don't block UI
+    return policyAllowed.length > 0;
+  }, [policyAllowed])
+
+  // Guard against stale selection if policy disallows virtual
+  useEffect(() => {
+    if (selectedChannel === 'virtual_meeting' && !orgAllowsVirtual) {
+      form.setFieldsValue({ deliveryChannel: undefined, meetingPlatform: undefined })
+    }
+  }, [orgAllowsVirtual, selectedChannel, form])
+
+  // Whether current provider has any connected meeting platforms
+  const hasPlatforms = useMemo(() => !!platforms && platforms.length > 0, [platforms])
+
+  // If provider has no connected platforms, do not allow virtual meeting selection
+  useEffect(() => {
+    if (selectedChannel === 'virtual_meeting' && !hasPlatforms) {
+      form.setFieldsValue({ deliveryChannel: undefined, meetingPlatform: undefined })
+    }
+  }, [hasPlatforms, selectedChannel, form])
 
   formRef.current = form
 
@@ -368,7 +393,7 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
       />
 
       {/* Ask channel only AFTER an employee is selected (positioned after Employee) */}
-      {selectedServiceObj && !!selectedEmployeeId && channelOptions.length > 0 && (
+      {selectedServiceObj && !!selectedEmployeeId && channelOptions.length > 0 && (!channelOptions.includes('virtual_meeting') || policyAllowed !== null) && (!channelOptions.includes('virtual_meeting') || platforms !== null) && (
         <>
           <Form.Item
             name="deliveryChannel"
@@ -382,24 +407,17 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
               {channelOptions.includes('phone_call') && (
                 <Radio.Button value="phone_call">Phone Call</Radio.Button>
               )}
-              {channelOptions.includes('virtual_meeting') && (
+              {channelOptions.includes('virtual_meeting') && orgAllowsVirtual && hasPlatforms && (
                 <Radio.Button value="virtual_meeting">Virtual Meeting</Radio.Button>
               )}
             </Radio.Group>
           </Form.Item>
 
-          {selectedChannel === 'virtual_meeting' && (
+          {selectedChannel === 'virtual_meeting' && hasPlatforms && (
             <Form.Item
               name="meetingPlatform"
               label="Choose Platform"
               rules={[{ required: true, message: 'Please select a platform' }]}
-              extra={
-                !selectedEmployeeId
-                  ? 'Pick an employee to see available platforms'
-                  : (!loadingPlatforms && (!platforms || platforms.length === 0)
-                      ? 'No connected platforms for the selected provider. Connect Zoom/Google/Teams in Meeting Integrations.'
-                      : undefined)
-              }
             >
               <Select
                 placeholder={
@@ -407,7 +425,7 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
                     ? 'Select employee first'
                     : loadingPlatforms
                       ? 'Loading...'
-                      : (platforms && platforms.length) ? 'Select a platform' : 'No platforms available'
+                      : 'Select a platform'
                 }
                 disabled={!selectedEmployeeId || loadingPlatforms || !(platforms && platforms.length)}
                 options={(platforms || []).map(p => ({
