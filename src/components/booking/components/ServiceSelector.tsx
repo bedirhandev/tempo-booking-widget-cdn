@@ -1,14 +1,8 @@
-// ServiceSelector.tsx
 import React from 'react';
 import { Form, Select } from 'antd';
 import { useIsMobile } from '../hooks/useIsMobile';
 import ServiceSelectorMobile from './ServiceSelectorMobile';
-
-interface Service {
-  id: number;
-  name: string;
-  price: number;
-}
+import type { Service } from '@/components/booking/types/index'
 
 interface ServiceSelectorProps {
   name?: string;
@@ -17,7 +11,7 @@ interface ServiceSelectorProps {
   services: Service[];
   required?: boolean;
   requiredMessage?: string;
-  formatPrice?: (price: number, currency?: string) => string; // Add this
+  formatPrice?: (service: Service) => string;
   allowClear?: boolean;
   style?: React.CSSProperties;
 }
@@ -37,7 +31,7 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = (props) => {
     services,
     required = true,
     requiredMessage = 'Please select a service',
-    formatPrice = (price) => `$${price.toFixed(2)}`, // Add default formatter
+    formatPrice = (service: Service) => service.formattedPrice ?? `$${service.price}`, // Default: use formattedPrice
     allowClear = true,
     style,
   } = props;
@@ -69,7 +63,7 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = (props) => {
         }
         options={services.map((service) => ({
           value: service.id,
-          label: `${service.name} (${formatPrice(service.price)})`, // Use formatPrice here
+          label: `${service.name} (${formatPrice(service)})`, // Use formatPrice(service)
         }))}
       />
     </Form.Item>

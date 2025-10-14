@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import PaymentForm from './PaymentForm';
+import type { Service } from '@/components/booking/types/index'
 import { createAppointmentPaymentIntent, type PaymentIntentResponse } from '@/components/booking/api';
 import { getGlobalConfig } from '@/widget/config';
 
@@ -11,6 +12,7 @@ export type PaymentWidgetProps = {
   apiBaseUrl?: string; // Expected to include /api/v1, defaults to http://127.0.0.1:8000/api/v1
   email?: string;
   name?: string;
+  service?: Service;
   onPaymentSuccess?: (bookingId: string) => void;
   onPaymentFailure?: (err: Error) => void;
   onReady?: () => void;
@@ -24,6 +26,7 @@ export default function PaymentWidget({
   apiBaseUrl,
   email,
   name,
+  service,
   onPaymentSuccess,
   onPaymentFailure,
   onReady,
@@ -155,6 +158,7 @@ export default function PaymentWidget({
           amount={intent.amount}
           currency={intent.currency}
           bookingId={intent.bookingId}
+          service={service}
           onPaymentSuccess={onPaymentSuccess}
           onPaymentFailure={onPaymentFailure}
           onStatusChange={onFormStatusChange}

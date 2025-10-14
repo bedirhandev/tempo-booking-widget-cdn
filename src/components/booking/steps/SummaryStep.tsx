@@ -1,25 +1,18 @@
 import React from 'react'
 import { Descriptions, Grid } from 'antd'
-import type { FormValues } from '@/components/booking/types'
-import { useFinancialSettings } from '@/components/booking/financial/FinancialSettingsProvider'
+import type { FormValues, Service } from '@/components/booking/types/index'
 
 const { useBreakpoint } = Grid
 
 interface SummaryStepProps {
   formValues: FormValues
+  service?: Service
 }
 
-const SummaryStep: React.FC<SummaryStepProps> = ({ formValues }) => {
+const SummaryStep: React.FC<SummaryStepProps> = ({ formValues, service }) => {
   const screens = useBreakpoint()
-  const { currencySymbol } = useFinancialSettings()
 
-  const priceDisplay = React.useMemo(() => {
-    const v = formValues.price as any
-    if (v == null || v === '') return undefined
-    const num = typeof v === 'number' ? v : parseFloat(String(v))
-    if (!isNaN(num)) return `${currencySymbol}${num.toFixed(2)}`
-    return `${currencySymbol}${v}`
-  }, [formValues.price, currencySymbol])
+  const priceDisplay = service?.formattedPrice ?? ''
 
   return (
     <Descriptions

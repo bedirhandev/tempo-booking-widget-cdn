@@ -3,11 +3,14 @@ import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js'
 import { CheckCircleOutlined, CheckOutlined, LoadingOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 
+import type { Service } from '@/components/booking/types/index'
+
 export type PaymentFormProps = {
   clientSecret: string;
   amount: number;
   currency: string;
   bookingId: string;
+  service?: Service;
   onPaymentSuccess?: (bookingId: string) => void;
   onPaymentFailure?: (err: Error) => void;
   onStatusChange?: (status: 'idle' | 'confirming' | 'succeeded' | 'failed') => void;
@@ -18,6 +21,7 @@ export default function PaymentForm({
   amount,
   currency,
   bookingId,
+  service,
   onPaymentSuccess,
   onPaymentFailure,
   onStatusChange,
@@ -30,6 +34,9 @@ export default function PaymentForm({
   const [succeeded, setSucceeded] = useState(false);
 
   const formatAmount = (value: number, curr: string) => {
+    if (service?.formattedPrice) {
+      return service.formattedPrice;
+    }
     try {
       return new Intl.NumberFormat(undefined, { style: 'currency', currency: curr.toUpperCase() }).format(value / 100);
     } catch {

@@ -238,7 +238,10 @@ const AppointmentBookingFormMobile: React.FC<AppointmentBookingFormMobileProps> 
             <Typography.Title level={4} style={{ marginBottom: 16, color: '#262626', textAlign: 'center' }}>
               Please review your appointment details
             </Typography.Title>
-            <SummaryStepMobile formValues={formValues} />
+            <SummaryStepMobile
+              formValues={formValues}
+              service={servicesData?.find(s => String(s.id) === String(bookingValues.serviceId))}
+            />
           </div>
         )
       }

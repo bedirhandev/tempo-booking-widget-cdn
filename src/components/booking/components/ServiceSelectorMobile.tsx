@@ -5,11 +5,7 @@ import { CheckList, Popup } from 'antd-mobile';
 import { DownOutline, CloseCircleFill } from 'antd-mobile-icons';
 import type { CheckListValue } from 'antd-mobile/es/components/check-list';
 
-interface Service {
-  id: number;
-  name: string;
-  price: number;
-}
+import type { Service } from '@/components/booking/types/index'
 
 interface ServiceSelectorMobileProps {
   name?: string;
@@ -18,7 +14,7 @@ interface ServiceSelectorMobileProps {
   services: Service[];
   required?: boolean;
   requiredMessage?: string;
-  formatPrice?: (price: number, currency?: string) => string;
+  formatPrice?: (service: Service) => string;
   allowClear?: boolean;
 }
 
@@ -27,7 +23,7 @@ interface ServiceInputProps {
   onChange?: (value: string | undefined) => void;
   services: Service[];
   placeholder?: string;
-  formatPrice: (price: number, currency?: string) => string;
+  formatPrice: (service: Service) => string;
   allowClear?: boolean;
 }
 
@@ -103,7 +99,7 @@ const ServiceInput = forwardRef<any, ServiceInputProps>(
             }}
           >
             {selectedService
-              ? `${selectedService.name} (${formatPrice(selectedService.price)})`
+              ? `${selectedService.name} (${formatPrice(selectedService)})`
               : placeholder}
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -186,7 +182,7 @@ const ServiceInput = forwardRef<any, ServiceInputProps>(
                     <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                       <span>{service.name}</span>
                       <span style={{ color: '#1677ff', fontWeight: 500 }}>
-                        {formatPrice(service.price)}
+                        {formatPrice(service)}
                       </span>
                     </div>
                   </CheckList.Item>
@@ -218,7 +214,7 @@ const ServiceSelectorMobile: React.FC<ServiceSelectorMobileProps> = ({
   services,
   required = true,
   requiredMessage = 'Please select a service',
-  formatPrice = (price) => `$${price.toFixed(2)}`,
+  formatPrice = (service: Service) => service.formattedPrice ?? `$${service.price}`,
   allowClear = true,
 }) => {
   return (

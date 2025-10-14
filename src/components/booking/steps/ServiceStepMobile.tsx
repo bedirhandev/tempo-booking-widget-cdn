@@ -14,7 +14,6 @@ import DateSelectorMobile from '@/components/booking/components/DateSelectorMobi
 import TimeSelectorMobile from '@/components/booking/components/TimeSelectorMobile'
 import EmployeeSelectorMobile from '@/components/booking/components/EmployeeSelectorMobile'
 import { useAvailableTimes } from '@/components/booking/hooks/useAvailableTimes'
-import { useFinancialSettings } from '@/components/booking/financial/FinancialSettingsProvider'
 import { getUserTimeFormatMode } from '@/components/booking/utils/timeFormat'
 
 dayjs.extend(isoWeek)
@@ -61,10 +60,7 @@ const ServiceStepMobile: React.FC<ServiceStepMobileProps> = ({
 
   // Format services and employees data
   const { services, employees } = useMemo(() => ({
-    services: servicesData.map(service => ({
-      ...service,
-      price: Number(service.price)
-    })),
+    services: servicesData,
     employees: employeesData?.map(employee => ({
       ...employee,
       schedule: Object.fromEntries(
@@ -214,10 +210,10 @@ const ServiceStepMobile: React.FC<ServiceStepMobileProps> = ({
     }))
   }, [form, services, employees, availableTimes, setFormValues, setBookingValues])
 
-  const { currencySymbol } = useFinancialSettings()
-  const formatPrice = useCallback((price: number): string => {
-    return `${currencySymbol}${price.toFixed(2)}`
-  }, [currencySymbol])
+  // Removed currencySymbol/context-based formatting
+  const formatPrice = useCallback((service: Service): string => {
+    return service.formattedPrice
+  }, [])
 
   const initialValues = useMemo(() => ({
     service: bookingValues.serviceId ? Number(bookingValues.serviceId) : undefined,

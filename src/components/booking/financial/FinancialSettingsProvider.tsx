@@ -44,7 +44,6 @@ type ProviderProps = {
 
 /**
  * Fetches tenant financial settings once on mount and exposes:
- * - currencyCode/currencySymbol
  * - payLaterEnabled/stripeEnabled
  * - isReady
  * On failure, logs and exposes safe defaults (USD, both disabled).

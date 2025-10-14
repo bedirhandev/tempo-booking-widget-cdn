@@ -14,7 +14,6 @@ import DateSelector from '@/components/booking/components/DateSelector'
 import TimeSelector from '@/components/booking/components/TimeSelector'
 import EmployeeSelector from '@/components/booking/components/EmployeeSelector'
 import { useAvailableTimes } from '@/components/booking/hooks/useAvailableTimes'
-import { useFinancialSettings } from '@/components/booking/financial/FinancialSettingsProvider'
 import { getUserTimeFormatMode } from '@/components/booking/utils/timeFormat'
 import { getProviderPlatforms } from '@/components/booking/api'
 
@@ -71,10 +70,7 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
 
   // Format services and employees data
   const { services, employees } = useMemo(() => ({
-    services: servicesData.map(service => ({
-      ...service,
-      price: Number(service.price)
-    })),
+    services: servicesData,
     employees: employeesData?.map(employee => ({
       ...employee,
       schedule: Object.fromEntries(
@@ -324,10 +320,10 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
     }))
   }, [form, services, employees, availableTimes, setFormValues, setBookingValues])
 
-  const { currencySymbol } = useFinancialSettings()
-  const formatPrice = useCallback((price: number): string => {
-    return `${currencySymbol}${price.toFixed(2)}`
-  }, [currencySymbol])
+  // Removed currencySymbol/context-based formatting
+  const formatPrice = useCallback((service: Service): string => {
+    return service.formattedPrice
+  }, [])
 
   const initialValues = useMemo(() => ({
     service: bookingValues.serviceId ? Number(bookingValues.serviceId) : undefined,

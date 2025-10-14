@@ -242,7 +242,10 @@ const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
             <Typography.Title level={4} style={{ marginBottom: 16, color: '#262626', textAlign: 'center' }}>
               Please review your appointment details
             </Typography.Title>
-            <SummaryStep formValues={formValues} />
+            <SummaryStep
+              formValues={formValues}
+              service={servicesData?.find(s => String(s.id) === String(bookingValues.serviceId))}
+            />
           </div>
         )
       }
