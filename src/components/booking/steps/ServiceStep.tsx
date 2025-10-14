@@ -121,8 +121,8 @@ const ServiceStep: React.FC<ServiceStepProps> = ({
 
     // 4) Legacy flags as last resort
     const derived: string[] = []
-    if ((selectedServiceObj as any).is_in_person_enabled) derived.push('in_person')
-    if ((selectedServiceObj as any).is_virtual_enabled) derived.push('virtual_meeting')
+    if ((selectedServiceObj as any).isInPersonEnabled) derived.push('in_person')
+    if ((selectedServiceObj as any).isVirtualEnabled) derived.push('virtual_meeting')
     return derived
   }, [selectedServiceObj])
 

@@ -44,20 +44,24 @@ export interface TeamMembersResponse {
 
 export interface Service {
     id: number;
+    categoryId: number;
     name: string;
     price: string;
-    duration?: number;
-    duration_formatted?: string;
+    priceCurrencyCode: string;
+    colorCode?: string | null;
+    deliveryChannels: string[];
+    duration: number;
+    durationFormatted: string;
+    availableChannels: Array<{ value: string; label: string }>;
+    formattedPrice: string;
+    priceCurrencySymbol: string;
 
-    // Multi-channel delivery (from backend)
-    deliveryChannels?: string[]; // ['virtual_meeting','phone_call','in_person']
-    availableChannels?: Array<{ value: string; label: string }>;
-    // Optional platform hints when virtual is enabled (if exposed)
-    enabledPlatforms?: string[]; // ['zoom','google_meet','microsoft_teams']
+    // Optional: for platforms hints (expand if needed)
+    enabledPlatforms?: string[];
 
-    // Backward-compat flags (derive in UI when not provided)
-    is_in_person_enabled?: boolean;
-    is_virtual_enabled?: boolean;
+    // Optional: backward-compat flags
+    isInPersonEnabled?: boolean;
+    isVirtualEnabled?: boolean;
 }
 
 export interface ServicesResponse {
