@@ -2,7 +2,7 @@ import React from 'react';
 import { Form, Select } from 'antd';
 import { useIsMobile } from '../hooks/useIsMobile';
 import ServiceSelectorMobile from './ServiceSelectorMobile';
-import type { Service } from '@/components/booking/types/index'
+import type { Service } from '@/components/booking/types/index';
 
 interface ServiceSelectorProps {
   name?: string;
@@ -31,7 +31,7 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = (props) => {
     services,
     required = true,
     requiredMessage = 'Please select a service',
-    formatPrice = (service: Service) => service.formattedPrice ?? `$${service.price}`, // Default: use formattedPrice
+    formatPrice = (service: Service) => service.formattedPrice,
     allowClear = true,
     style,
   } = props;
@@ -57,13 +57,13 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = (props) => {
         allowClear={allowClear}
         style={style}
         showSearch
-        optionFilterProp="children"
+        optionFilterProp="label"
         filterOption={(input, option) =>
           (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
         }
         options={services.map((service) => ({
-          value: service.id,
-          label: `${service.name} (${formatPrice(service)})`, // Use formatPrice(service)
+          value: Number(service.id),
+          label: `${service.name} (${formatPrice(service)})`,
         }))}
       />
     </Form.Item>

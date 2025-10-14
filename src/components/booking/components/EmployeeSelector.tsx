@@ -63,7 +63,7 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = (props) => {
                 style={style}
                 suffixIcon={<UserOutlined />}
                 options={availableEmployees.map(({ employee, disabled }) => ({
-                    value: employee.id,
+                    value: Number(employee.id),
                     label: employee.name,
                     disabled,
                 }))}

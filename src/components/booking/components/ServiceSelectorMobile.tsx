@@ -214,7 +214,7 @@ const ServiceSelectorMobile: React.FC<ServiceSelectorMobileProps> = ({
   services,
   required = true,
   requiredMessage = 'Please select a service',
-  formatPrice = (service: Service) => service.formattedPrice ?? `$${service.price}`,
+  formatPrice = (service: Service) => service.formattedPrice,
   allowClear = true,
 }) => {
   return (
