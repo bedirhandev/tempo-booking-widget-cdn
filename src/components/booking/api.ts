@@ -1,23 +1,33 @@
 import axios, { type AxiosResponse } from "axios";
-import type { ServicesResponse, TeamMembersResponse } from "@/components/booking/types/index"
+import type { ServicesResponse, TeamMembersResponse, CreateAppointmentResponse } from "@/components/booking/types/index"
 import { transformBookingToLocal } from "./utils/datetime";
 import { getUserTimeFormatMode } from '@/components/booking/utils/timeFormat'
 
 const defaultBaseUrl: string = 'http://127.0.0.1:8000/api/v1';
 
-export const createAppointment = async (data: any, tenantId: string, baseUrl: string = defaultBaseUrl) => {
+export const createAppointment = async (
+  data: any,
+  tenantId: string,
+  baseUrl: string = defaultBaseUrl
+): Promise<CreateAppointmentResponse> => {
   const pad = (n: number) => n.toString().padStart(2, "0");
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const payload = {
     ...data,
     date: data.date
-      ? `${data.date.getFullYear()}-${pad(data.date.getMonth() + 1)}-${pad(data.date.getDate())}`
+      ? `${data.date.getFullYear()}-${pad(data.date.getMonth() + 1)}-${pad(
+        data.date.getDate()
+      )}`
       : undefined,
     notificationEnabled: true,
     timezone: userTimezone,
   };
+
   try {
-    const response = await axios.post(`${baseUrl}/${tenantId}/appointments`, payload);
+    const response: AxiosResponse<CreateAppointmentResponse> = await axios.post(
+      `${baseUrl}/${tenantId}/appointments`,
+      payload
+    );
     return response.data;
   } catch (error) {
     console.error("Error creating booking:", error);
